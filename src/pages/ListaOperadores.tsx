@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { Operador } from '../lib/types'
 import { Table, TableHeader, TableHeaderCell, TableBody, TableRow, TableCell } from '../components/UI/Table'
-import { Button } from '../components/UI/Button'
-import { Link } from 'react-router-dom'
 
 interface OperadorComEquipe extends Operador {
   equipe?: {
@@ -60,11 +58,6 @@ export const ListaOperadores: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
-
-  const formatarData = (data: string) => {
-    if (!data) return '-'
-    return new Date(data).toLocaleDateString('pt-BR')
   }
 
   const calcularIdade = (nascimento: string) => {
