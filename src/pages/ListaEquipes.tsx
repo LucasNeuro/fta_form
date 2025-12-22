@@ -1,0 +1,453 @@
+import React, { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
+import { Equipe, CadastroLink } from '../lib/types'
+import { Table, TableHeader, TableHeaderCell, TableBody, TableRow, TableCell } from '../components/UI/Table'
+import { Button } from '../components/UI/Button'
+import { Sideover } from '../components/UI/Sideover'
+import { useAuth } from '../hooks/useAuth'
+
+export const ListaEquipes: React.FC = () => {
+  const { user, isAdmin } = useAuth()
+  const [equipes, setEquipes] = useState<Equipe[]>([])
+  const [loading, setLoading] = useState(true)
+  const [equipeSelecionada, setEquipeSelecionada] = useState<Equipe | null>(null)
+  const [sideoverAberto, setSideoverAberto] = useState(false)
+  const [linksEquipe, setLinksEquipe] = useState<CadastroLink[]>([])
+  const [carregandoLinks, setCarregandoLinks] = useState(false)
+
+  useEffect(() => {
+    carregarEquipes()
+  }, [])
+
+  useEffect(() => {
+    if (equipeSelecionada) {
+      carregarLinksEquipe()
+    }
+  }, [equipeSelecionada])
+
+  const carregarEquipes = async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('equipes')
+        .select('*')
+        .order('nome')
+      
+      if (error) throw error
+      if (data) setEquipes(data)
+    } catch (error: any) {
+      console.error('Erro ao carregar equipes:', error.message)
+      alert('Erro ao carregar equipes: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const carregarLinksEquipe = async () => {
+    if (!equipeSelecionada) return
+    
+    try {
+      setCarregandoLinks(true)
+      const { data, error } = await supabase
+        .from('cadastro_links')
+        .select('*')
+        .eq('equipe_id', equipeSelecionada.id)
+        .eq('tipo', 'operador')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      if (data) setLinksEquipe(data)
+    } catch (error: any) {
+      console.error('Erro ao carregar links:', error.message)
+    } finally {
+      setCarregandoLinks(false)
+    }
+  }
+
+  const abrirSideover = (equipe: Equipe) => {
+    setEquipeSelecionada(equipe)
+    setSideoverAberto(true)
+  }
+
+  const criarLinkOperador = async () => {
+    if (!equipeSelecionada) return
+
+    try {
+      if (!user) {
+        alert('Você precisa estar logado!')
+        return
+      }
+
+      const token = crypto.randomUUID()
+      const { error } = await supabase
+        .from('cadastro_links')
+        .insert([{
+          token,
+          tipo: 'operador',
+          equipe_id: equipeSelecionada.id,
+          criado_por: user.id,
+          usado: false,
+          ativo: true
+        }])
+
+      if (error) throw error
+
+      // Recarregar links
+      await carregarLinksEquipe()
+      
+      // Copiar link automaticamente
+      const url = `${window.location.origin}/cadastro/operador/${token}`
+      navigator.clipboard.writeText(url)
+      alert('Link criado e copiado para área de transferência!')
+    } catch (error: any) {
+      alert('Erro ao criar link: ' + error.message)
+    }
+  }
+
+  const toggleLinkAtivo = async (linkId: string, ativoAtual: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('cadastro_links')
+        .update({ ativo: !ativoAtual })
+        .eq('id', linkId)
+
+      if (error) throw error
+      await carregarLinksEquipe()
+    } catch (error: any) {
+      alert('Erro ao atualizar link: ' + error.message)
+    }
+  }
+
+  const excluirEquipe = async (equipeId: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta equipe? Esta ação não pode ser desfeita!')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('equipes')
+        .delete()
+        .eq('id', equipeId)
+
+      if (error) {
+        console.error('Erro detalhado:', error)
+        throw error
+      }
+      
+      alert('Equipe excluída com sucesso!')
+      await carregarEquipes()
+      
+      if (equipeSelecionada?.id === equipeId) {
+        setSideoverAberto(false)
+        setEquipeSelecionada(null)
+        setLinksEquipe([])
+      }
+    } catch (error: any) {
+      console.error('Erro ao excluir equipe:', error)
+      alert('Erro ao excluir equipe: ' + (error.message || 'Erro desconhecido'))
+    }
+  }
+
+  const toggleEquipeAtivo = async (equipeId: string, ativoAtual: boolean) => {
+    try {
+      const novoStatus = !ativoAtual
+      const { error } = await supabase
+        .from('equipes')
+        .update({ ativo: novoStatus })
+        .eq('id', equipeId)
+
+      if (error) {
+        console.error('Erro detalhado:', error)
+        throw error
+      }
+      
+      await carregarEquipes()
+      
+      if (equipeSelecionada?.id === equipeId) {
+        setEquipeSelecionada({ ...equipeSelecionada, ativo: novoStatus })
+      }
+      
+      alert(`Equipe ${novoStatus ? 'ativada' : 'desativada'} com sucesso!`)
+    } catch (error: any) {
+      console.error('Erro ao atualizar equipe:', error)
+      alert('Erro ao atualizar equipe: ' + (error.message || 'Erro desconhecido'))
+    }
+  }
+
+  const formatarData = (data: string) => {
+    if (!data) return '-'
+    return new Date(data).toLocaleDateString('pt-BR')
+  }
+
+  const formatarLink = (token: string) => {
+    return `${window.location.origin}/cadastro/operador/${token}`
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-fta-dark text-white p-8 flex items-center justify-center">
+        <div className="text-xl">Carregando equipes...</div>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="min-h-screen bg-fta-dark text-white p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold">Equipes Cadastradas</h1>
+          </div>
+
+          {equipes.length === 0 ? (
+            <div className="bg-fta-gray/50 p-12 rounded-xl border border-white/10 text-center">
+              <p className="text-white/60 text-lg mb-4">Nenhuma equipe cadastrada ainda.</p>
+              <p className="text-white/40 text-sm">Use um link de cadastro de equipe para começar.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableHeaderCell>Nome</TableHeaderCell>
+                <TableHeaderCell>Capitão</TableHeaderCell>
+                <TableHeaderCell>Total Membros</TableHeaderCell>
+                <TableHeaderCell>Ativos</TableHeaderCell>
+                <TableHeaderCell>Cidade / Estado</TableHeaderCell>
+                <TableHeaderCell>Graduação FTA</TableHeaderCell>
+                <TableHeaderCell>Membro Desde</TableHeaderCell>
+                <TableHeaderCell>Status</TableHeaderCell>
+                {isAdmin && <TableHeaderCell>Ações</TableHeaderCell>}
+              </TableHeader>
+              <TableBody>
+                {equipes.map((equipe) => (
+                  <TableRow key={equipe.id}>
+                    <TableCell className="font-medium">{equipe.nome}</TableCell>
+                    <TableCell>{equipe.capitao}</TableCell>
+                    <TableCell>{equipe.total_membros}</TableCell>
+                    <TableCell>
+                      <span className="px-2 py-1 bg-fta-green/20 text-fta-green rounded text-xs font-medium">
+                        {equipe.ativos}
+                      </span>
+                    </TableCell>
+                    <TableCell>{equipe.cidade} / {equipe.estado}</TableCell>
+                    <TableCell>
+                      <span className="px-2 py-1 bg-white/10 rounded text-xs">
+                        {equipe.graduacao_fta}
+                      </span>
+                    </TableCell>
+                    <TableCell>{formatarData(equipe.membro_desde)}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        equipe.ativo !== false 
+                          ? 'bg-fta-green/20 text-fta-green' 
+                          : 'bg-red-500/20 text-red-400'
+                      }`}>
+                        {equipe.ativo !== false ? 'Ativa' : 'Desativada'}
+                      </span>
+                    </TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              abrirSideover(equipe)
+                            }}
+                            className="text-fta-green hover:text-fta-green/80 transition-colors p-2"
+                            title="Ver detalhes e criar link"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleEquipeAtivo(equipe.id!, equipe.ativo !== false)
+                            }}
+                            className={`p-2 transition-colors ${
+                              equipe.ativo !== false
+                                ? 'text-yellow-400 hover:text-yellow-300'
+                                : 'text-fta-green hover:text-fta-green/80'
+                            }`}
+                            title={equipe.ativo !== false ? 'Desativar equipe' : 'Ativar equipe'}
+                          >
+                            {equipe.ativo !== false ? (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                              </svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            )}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              excluirEquipe(equipe.id!)
+                            }}
+                            className="text-red-400 hover:text-red-300 transition-colors p-2"
+                            title="Excluir equipe"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+
+          <div className="mt-4 text-white/60 text-sm">
+            Total: {equipes.length} equipe{equipes.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+      </div>
+
+      {/* Sideover para gerenciar equipe */}
+      <Sideover
+        isOpen={sideoverAberto}
+        onClose={() => {
+          setSideoverAberto(false)
+          setEquipeSelecionada(null)
+          setLinksEquipe([])
+        }}
+        title={equipeSelecionada ? `Equipe: ${equipeSelecionada.nome}` : 'Detalhes da Equipe'}
+      >
+        {equipeSelecionada && (
+          <div className="space-y-6">
+            {/* Detalhes da Equipe */}
+            <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
+              <h3 className="text-lg font-semibold mb-4 text-fta-green">Informações da Equipe</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-white/60">Capitão:</span>
+                  <p className="text-white font-medium">{equipeSelecionada.capitao}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Cidade/Estado:</span>
+                  <p className="text-white font-medium">{equipeSelecionada.cidade} / {equipeSelecionada.estado}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Total de Membros:</span>
+                  <p className="text-white font-medium">{equipeSelecionada.total_membros}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Membros Ativos:</span>
+                  <p className="text-white font-medium">{equipeSelecionada.ativos}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Graduação FTA:</span>
+                  <p className="text-white font-medium">{equipeSelecionada.graduacao_fta}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Membro Desde:</span>
+                  <p className="text-white font-medium">{formatarData(equipeSelecionada.membro_desde)}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Status:</span>
+                  <p className={`font-medium ${
+                    equipeSelecionada.ativo !== false ? 'text-fta-green' : 'text-red-400'
+                  }`}>
+                    {equipeSelecionada.ativo !== false ? 'Ativa' : 'Desativada'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Links de Operador Criados */}
+            <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-fta-green">Links de Cadastro de Operador</h3>
+                <Button onClick={criarLinkOperador}>
+                  + Novo Link
+                </Button>
+              </div>
+
+              {carregandoLinks ? (
+                <p className="text-white/60 text-sm">Carregando links...</p>
+              ) : linksEquipe.length === 0 ? (
+                <p className="text-white/60 text-sm">Nenhum link criado ainda.</p>
+              ) : (
+                <div className="space-y-3">
+                  {linksEquipe.map((link) => (
+                    <div
+                      key={link.id}
+                      className={`bg-fta-dark p-3 rounded border ${
+                        link.ativo !== false ? 'border-fta-green/30' : 'border-red-500/30 opacity-60'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-xs px-2 py-1 rounded ${
+                              link.usado
+                                ? 'bg-yellow-500/20 text-yellow-400'
+                                : link.ativo !== false
+                                ? 'bg-fta-green/20 text-fta-green'
+                                : 'bg-red-500/20 text-red-400'
+                            }`}>
+                              {link.usado ? 'Usado' : link.ativo !== false ? 'Ativo' : 'Desativado'}
+                            </span>
+                            {link.created_at && (
+                              <span className="text-white/40 text-xs">
+                                {formatarData(link.created_at)}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-fta-green text-xs break-all font-mono">
+                            {formatarLink(link.token)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(formatarLink(link.token))
+                              alert('Link copiado!')
+                            }}
+                            className="text-white/60 hover:text-white p-1"
+                            title="Copiar link"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                          {!link.usado && (
+                            <button
+                              onClick={() => toggleLinkAtivo(link.id!, link.ativo !== false)}
+                              className={`p-1 ${
+                                link.ativo !== false
+                                  ? 'text-yellow-400 hover:text-yellow-300'
+                                  : 'text-fta-green hover:text-fta-green/80'
+                              }`}
+                              title={link.ativo !== false ? 'Desativar link' : 'Ativar link'}
+                            >
+                              {link.ativo !== false ? (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Sideover>
+    </>
+  )
+}
