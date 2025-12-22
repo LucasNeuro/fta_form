@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { Equipe, CadastroLink } from '../lib/types'
 import { Table, TableHeader, TableHeaderCell, TableBody, TableRow, TableCell } from '../components/UI/Table'
 import { Button } from '../components/UI/Button'
+import { Input } from '../components/UI/Input'
 import { Sideover } from '../components/UI/Sideover'
 import { useAuth } from '../hooks/useAuth'
 
@@ -14,6 +15,8 @@ export const ListaEquipes: React.FC = () => {
   const [sideoverAberto, setSideoverAberto] = useState(false)
   const [linksEquipe, setLinksEquipe] = useState<CadastroLink[]>([])
   const [carregandoLinks, setCarregandoLinks] = useState(false)
+  const [nomeLinkOperador, setNomeLinkOperador] = useState<string>('')
+  const [mostrarFormLink, setMostrarFormLink] = useState(false)
 
   useEffect(() => {
     carregarEquipes()
@@ -78,6 +81,11 @@ export const ListaEquipes: React.FC = () => {
         return
       }
 
+      if (!nomeLinkOperador.trim()) {
+        alert('Por favor, informe um nome para identificar o link!')
+        return
+      }
+
       const token = crypto.randomUUID()
       const { error } = await supabase
         .from('cadastro_links')
@@ -87,7 +95,8 @@ export const ListaEquipes: React.FC = () => {
           equipe_id: equipeSelecionada.id,
           criado_por: user.id,
           usado: false,
-          ativo: true
+          ativo: true,
+          nome: nomeLinkOperador.trim()
         }])
 
       if (error) throw error
@@ -99,6 +108,10 @@ export const ListaEquipes: React.FC = () => {
       const url = `${window.location.origin}/cadastro/operador/${token}`
       navigator.clipboard.writeText(url)
       alert('Link criado e copiado para área de transferência!')
+      
+      // Limpar e fechar formulário
+      setNomeLinkOperador('')
+      setMostrarFormLink(false)
     } catch (error: any) {
       alert('Erro ao criar link: ' + error.message)
     }
@@ -316,6 +329,8 @@ export const ListaEquipes: React.FC = () => {
           setSideoverAberto(false)
           setEquipeSelecionada(null)
           setLinksEquipe([])
+          setMostrarFormLink(false)
+          setNomeLinkOperador('')
         }}
         title={equipeSelecionada ? `Equipe: ${equipeSelecionada.nome}` : 'Detalhes da Equipe'}
       >
@@ -364,10 +379,37 @@ export const ListaEquipes: React.FC = () => {
             <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-fta-green">Links de Cadastro de Operador</h3>
-                <Button onClick={criarLinkOperador}>
-                  + Novo Link
+                <Button onClick={() => setMostrarFormLink(!mostrarFormLink)}>
+                  {mostrarFormLink ? 'Cancelar' : '+ Novo Link'}
                 </Button>
               </div>
+
+              {mostrarFormLink && (
+                <div className="mb-4 p-4 bg-fta-dark rounded-lg border border-fta-green/30">
+                  <Input
+                    label="Nome do Link (ex: Link para Operador João, Cadastro SP, etc.)"
+                    value={nomeLinkOperador}
+                    onChange={(e) => setNomeLinkOperador(e.target.value)}
+                    placeholder="Ex: Link para Operador João"
+                    required
+                  />
+                  <div className="mt-4 flex gap-3">
+                    <Button onClick={criarLinkOperador} className="flex-1">
+                      Criar Link
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setMostrarFormLink(false)
+                        setNomeLinkOperador('')
+                      }}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {carregandoLinks ? (
                 <p className="text-white/60 text-sm">Carregando links...</p>
@@ -384,6 +426,11 @@ export const ListaEquipes: React.FC = () => {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
+                          <div className="mb-2">
+                            <p className="font-medium text-white text-sm">
+                              {link.nome || <span className="text-white/40 italic">Sem nome</span>}
+                            </p>
+                          </div>
                           <div className="flex items-center gap-2 mb-1">
                             <span className={`text-xs px-2 py-1 rounded ${
                               link.usado

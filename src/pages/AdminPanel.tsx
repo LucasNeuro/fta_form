@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/UI/Button'
+import { Input } from '../components/UI/Input'
 import { Table, TableHeader, TableHeaderCell, TableBody, TableRow, TableCell } from '../components/UI/Table'
 
 export const AdminPanel: React.FC = () => {
@@ -9,6 +10,7 @@ export const AdminPanel: React.FC = () => {
   const [links, setLinks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [linkCriado, setLinkCriado] = useState<string>('')
+  const [nomeLink, setNomeLink] = useState<string>('')
 
   useEffect(() => {
     carregarLinks()
@@ -40,6 +42,11 @@ export const AdminPanel: React.FC = () => {
         return
       }
 
+      if (!nomeLink.trim()) {
+        alert('Por favor, informe um nome para identificar o link!')
+        return
+      }
+
       const token = crypto.randomUUID()
       const { error } = await supabase
         .from('cadastro_links')
@@ -48,7 +55,8 @@ export const AdminPanel: React.FC = () => {
           tipo: 'equipe',
           criado_por: user.id,
           usado: false,
-          ativo: true
+          ativo: true,
+          nome: nomeLink.trim()
         }])
 
       if (error) throw error
@@ -58,6 +66,9 @@ export const AdminPanel: React.FC = () => {
       
       // Copiar automaticamente
       navigator.clipboard.writeText(url)
+      
+      // Limpar nome do link
+      setNomeLink('')
       
       carregarLinks()
     } catch (error: any) {
@@ -157,7 +168,10 @@ export const AdminPanel: React.FC = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setLinkCriado('')}
+                  onClick={() => {
+                    setLinkCriado('')
+                    setNomeLink('')
+                  }}
                   className="flex-1"
                 >
                   Criar Novo Link
@@ -165,9 +179,18 @@ export const AdminPanel: React.FC = () => {
               </div>
             </div>
           ) : (
-            <Button onClick={criarLinkEquipe}>
-              Gerar Link de Cadastro de Equipe
-            </Button>
+            <div className="space-y-4">
+              <Input
+                label="Nome do Link (ex: Link para Equipe Alpha, Cadastro SP, etc.)"
+                value={nomeLink}
+                onChange={(e) => setNomeLink(e.target.value)}
+                placeholder="Ex: Link para Equipe Alpha"
+                required
+              />
+              <Button onClick={criarLinkEquipe}>
+                Gerar Link de Cadastro de Equipe
+              </Button>
+            </div>
           )}
         </div>
 
@@ -180,6 +203,7 @@ export const AdminPanel: React.FC = () => {
           ) : (
             <Table>
               <TableHeader>
+                <TableHeaderCell>Nome</TableHeaderCell>
                 <TableHeaderCell>Link</TableHeaderCell>
                 <TableHeaderCell>Status</TableHeaderCell>
                 <TableHeaderCell>Criado em</TableHeaderCell>
@@ -188,6 +212,11 @@ export const AdminPanel: React.FC = () => {
               <TableBody>
                 {links.map((link) => (
                   <TableRow key={link.id}>
+                    <TableCell>
+                      <span className="font-medium text-white">
+                        {link.nome || <span className="text-white/40 italic">Sem nome</span>}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <p className="text-fta-green text-xs break-all font-mono max-w-xs truncate">
                         {`${window.location.origin}/cadastro/equipe/${link.token}`}

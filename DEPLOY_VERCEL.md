@@ -176,3 +176,4 @@ Se você já tentou fazer deploy e deu erro, tente:
 3. Verificar se as variáveis de ambiente estão configuradas
 4. Fazer deploy novamente
 
+

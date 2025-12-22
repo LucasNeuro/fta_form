@@ -94,3 +94,4 @@ WHERE schemaname = 'public'
   AND tablename IN ('equipes', 'cadastro_links')
 ORDER BY tablename, policyname;
 
+

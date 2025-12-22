@@ -50,5 +50,6 @@ export interface CadastroLink {
   usado_por?: string
   expires_at?: string
   created_at?: string
+  nome?: string // Nome/descrição do link para identificação
 }
 

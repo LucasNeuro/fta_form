@@ -112,3 +112,4 @@ WHERE tablename IN ('equipes', 'cadastro_links');
 
 Após executar o SQL, todas as funcionalidades de CRUD estarão funcionando!
 
+
