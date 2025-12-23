@@ -6,7 +6,8 @@ import {
   MdAdminPanelSettings, 
   MdPeople, 
   MdGroups, 
-  MdAssessment 
+  MdAssessment,
+  MdWarning
 } from 'react-icons/md'
 
 export const Sidebar: React.FC = () => {
@@ -22,7 +23,10 @@ export const Sidebar: React.FC = () => {
     ...(isAdmin ? [{ path: '/admin', label: 'Admin', icon: MdAdminPanelSettings }] : []),
     { path: '/operadores', label: 'Operadores', icon: MdPeople },
     { path: '/equipes', label: 'Equipes', icon: MdGroups },
-    ...(isAdmin ? [{ path: '/relatorio-equipes', label: 'Relatório Equipes', icon: MdAssessment }] : []),
+    ...(isAdmin ? [
+      { path: '/relatorio-equipes', label: 'Relatório Equipes', icon: MdAssessment },
+      { path: '/tipos-transgressoes', label: 'Tipos Transgressões', icon: MdWarning }
+    ] : []),
   ]
 
   return (

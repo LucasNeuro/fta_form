@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Anotacao } from '../../lib/types'
+import { Anotacao, TipoTransgressao } from '../../lib/types'
 import { Button } from '../UI/Button'
+import { Input } from '../UI/Input'
+import { MdDelete } from 'react-icons/md'
 
 interface ListaAnotacoesProps {
   tipo: 'equipe' | 'operador'
@@ -19,22 +21,52 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
   onAnotacaoCriada
 }) => {
   const [anotacoes, setAnotacoes] = useState<Anotacao[]>([])
+  const [tiposTransgressoes, setTiposTransgressoes] = useState<TipoTransgressao[]>([])
   const [loading, setLoading] = useState(true)
   const [mostrarForm, setMostrarForm] = useState(false)
+  const [eTransgressao, setETransgressao] = useState(false)
+  const [tipoTransgressaoId, setTipoTransgressaoId] = useState<string>('')
+  const [outrosTitulo, setOutrosTitulo] = useState('')
+  const [dataEvento, setDataEvento] = useState('')
+  const [nomeEvento, setNomeEvento] = useState('')
+  const [localEvento, setLocalEvento] = useState('')
   const [titulo, setTitulo] = useState('')
   const [descricao, setDescricao] = useState('')
   const [criando, setCriando] = useState(false)
 
   useEffect(() => {
+    carregarTiposTransgressoes()
     carregarAnotacoes()
   }, [tipo, equipeId, operadorId])
+
+  const carregarTiposTransgressoes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tipos_transgressoes')
+        .select('*')
+        .eq('ativo', true)
+        .order('nome')
+
+      if (error) throw error
+      if (data) setTiposTransgressoes(data)
+    } catch (error: any) {
+      console.error('Erro ao carregar tipos de transgressões:', error.message)
+    }
+  }
 
   const carregarAnotacoes = async () => {
     try {
       setLoading(true)
       let query = supabase
         .from('anotacoes')
-        .select('*')
+        .select(`
+          *,
+          tipo_transgressao:tipo_transgressao_id (
+            id,
+            nome,
+            descricao
+          )
+        `)
         .eq('tipo', tipo)
         .order('created_at', { ascending: false })
 
@@ -63,9 +95,10 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
         const usersMap = new Map(usersData?.map(u => [u.id, u.email]) || [])
         
         // Mapear anotações com email do criador
-        const anotacoesComCriador = data.map(anot => ({
+        const anotacoesComCriador = data.map((anot: any) => ({
           ...anot,
-          criado_por_nome: usersMap.get(anot.criado_por) || 'Desconhecido'
+          criado_por_nome: usersMap.get(anot.criado_por) || 'Desconhecido',
+          tipo_transgressao: anot.tipo_transgressao || null
         }))
         
         setAnotacoes(anotacoesComCriador)
@@ -78,9 +111,29 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
   }
 
   const criarAnotacao = async () => {
-    if (!descricao.trim()) {
-      alert('Por favor, preencha a descrição da anotação!')
-      return
+    if (eTransgressao) {
+      // Validações para transgressão
+      if (!tipoTransgressaoId) {
+        alert('Por favor, selecione um tipo de transgressão!')
+        return
+      }
+      if (!dataEvento) {
+        alert('Por favor, informe a data do evento!')
+        return
+      }
+      if (!nomeEvento.trim()) {
+        alert('Por favor, informe o nome do evento!')
+        return
+      }
+      if (!localEvento.trim()) {
+        alert('Por favor, informe o local do evento!')
+        return
+      }
+    } else {
+      if (!descricao.trim()) {
+        alert('Por favor, preencha a descrição da anotação!')
+        return
+      }
     }
 
     try {
@@ -96,9 +149,24 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
 
       const anotacaoData: any = {
         tipo,
-        descricao: descricao.trim(),
+        descricao: eTransgressao 
+          ? `Data: ${dataEvento} | Evento: ${nomeEvento.trim()} | Local: ${localEvento.trim()}`
+          : descricao.trim(),
         criado_por: user.id,
-        titulo: titulo.trim() || null
+        titulo: eTransgressao 
+          ? (tipoTransgressaoId === 'outros' ? outrosTitulo.trim() : tiposTransgressoes.find(t => t.id === tipoTransgressaoId)?.nome || '')
+          : (titulo.trim() || null),
+        e_transgressao: eTransgressao
+      }
+
+      if (eTransgressao) {
+        // Se for "Outros", não vincular a um tipo específico
+        if (tipoTransgressaoId !== 'outros') {
+          anotacaoData.tipo_transgressao_id = tipoTransgressaoId
+        }
+        anotacaoData.data_evento = dataEvento
+        anotacaoData.nome_evento = nomeEvento.trim()
+        anotacaoData.local_evento = localEvento.trim()
       }
 
       if (tipo === 'equipe' && equipeId) {
@@ -116,11 +184,11 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
       // Se for anotação de operador e tiver equipe_id, criar também na equipe
       if (tipo === 'operador' && operadorEquipeId) {
         const anotacaoEquipeData = {
+          ...anotacaoData,
           tipo: 'equipe' as const,
           equipe_id: operadorEquipeId,
-          descricao: `[Operador] ${titulo.trim() ? titulo.trim() + ': ' : ''}${descricao.trim()}`,
-          criado_por: user.id,
-          titulo: null
+          operador_id: null,
+          descricao: `[Operador] ${anotacaoData.descricao}`
         }
 
         await supabase
@@ -131,6 +199,12 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
       // Limpar formulário
       setTitulo('')
       setDescricao('')
+      setETransgressao(false)
+      setTipoTransgressaoId('')
+      setOutrosTitulo('')
+      setDataEvento('')
+      setNomeEvento('')
+      setLocalEvento('')
       setMostrarForm(false)
       
       // Recarregar anotações
@@ -175,6 +249,11 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
     return new Date(data).toLocaleString('pt-BR')
   }
 
+  const formatarDataEvento = (data: string) => {
+    if (!data) return '-'
+    return new Date(data).toLocaleDateString('pt-BR')
+  }
+
   if (loading) {
     return <div className="text-white/60 text-sm">Carregando anotações...</div>
   }
@@ -193,40 +272,131 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
       {mostrarForm && (
         <div className="bg-fta-dark p-4 rounded-lg border border-fta-green/30">
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
-                Título (opcional)
-              </label>
-              <input
-                type="text"
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                placeholder="Ex: Falta em jogo, Problema em campo, etc."
-                className="w-full px-4 py-2 bg-fta-gray border border-white/20 rounded-lg text-white focus:outline-none focus:border-fta-green"
-              />
+            {/* Toggle Transgressão/Anotação */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setETransgressao(false)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  !eTransgressao
+                    ? 'bg-fta-green text-white'
+                    : 'bg-fta-gray text-white/60 hover:text-white'
+                }`}
+              >
+                Anotação Normal
+              </button>
+              <button
+                onClick={() => setETransgressao(true)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  eTransgressao
+                    ? 'bg-red-500 text-white'
+                    : 'bg-fta-gray text-white/60 hover:text-white'
+                }`}
+              >
+                Transgressão
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
-                Descrição *
-              </label>
-              <textarea
-                value={descricao}
-                onChange={(e) => setDescricao(e.target.value)}
-                placeholder="Descreva a observação..."
-                rows={4}
-                className="w-full px-4 py-2 bg-fta-gray border border-white/20 rounded-lg text-white focus:outline-none focus:border-fta-green resize-none"
-              />
-            </div>
+
+            {eTransgressao ? (
+              /* Formulário de Transgressão */
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    Tipo de Transgressão *
+                  </label>
+                  <select
+                    value={tipoTransgressaoId}
+                    onChange={(e) => {
+                      setTipoTransgressaoId(e.target.value)
+                      setOutrosTitulo('')
+                    }}
+                    className="w-full px-4 py-2 bg-fta-gray border border-white/20 rounded-lg text-white focus:outline-none focus:border-fta-green"
+                    required
+                  >
+                    <option value="">Selecione um tipo...</option>
+                    {tiposTransgressoes.map((tipo) => (
+                      <option key={tipo.id} value={tipo.id}>
+                        {tipo.nome}
+                      </option>
+                    ))}
+                    <option value="outros">Outros</option>
+                  </select>
+                </div>
+
+                {tipoTransgressaoId === 'outros' && (
+                  <Input
+                    label="Especificar Tipo de Transgressão *"
+                    value={outrosTitulo}
+                    onChange={(e) => setOutrosTitulo(e.target.value)}
+                    placeholder="Digite o tipo de transgressão"
+                    required
+                  />
+                )}
+
+                <Input
+                  label="Data do Evento *"
+                  type="date"
+                  value={dataEvento}
+                  onChange={(e) => setDataEvento(e.target.value)}
+                  required
+                />
+
+                <Input
+                  label="Nome do Evento *"
+                  value={nomeEvento}
+                  onChange={(e) => setNomeEvento(e.target.value)}
+                  placeholder="Ex: Jogo de Airsoft, Treinamento, etc."
+                  required
+                />
+
+                <Input
+                  label="Local do Evento *"
+                  value={localEvento}
+                  onChange={(e) => setLocalEvento(e.target.value)}
+                  placeholder="Ex: Campo XYZ, Local ABC"
+                  required
+                />
+              </>
+            ) : (
+              /* Formulário de Anotação Normal */
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    Título (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={titulo}
+                    onChange={(e) => setTitulo(e.target.value)}
+                    placeholder="Ex: Observação importante, Nota sobre comportamento, etc."
+                    className="w-full px-4 py-2 bg-fta-gray border border-white/20 rounded-lg text-white focus:outline-none focus:border-fta-green"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    Descrição *
+                  </label>
+                  <textarea
+                    value={descricao}
+                    onChange={(e) => setDescricao(e.target.value)}
+                    placeholder="Descreva a observação..."
+                    rows={4}
+                    className="w-full px-4 py-2 bg-fta-gray border border-white/20 rounded-lg text-white focus:outline-none focus:border-fta-green resize-none"
+                  />
+                </div>
+              </>
+            )}
+
             {tipo === 'operador' && operadorEquipeId && (
               <div className="bg-blue-500/20 border border-blue-500/50 p-3 rounded-lg">
                 <p className="text-blue-400 text-xs">
-                  💡 Esta anotação será automaticamente copiada para a ficha da equipe.
+                  Esta anotação será automaticamente copiada para a ficha da equipe.
                 </p>
               </div>
             )}
+
             <div className="flex gap-3">
               <Button onClick={criarAnotacao} disabled={criando} className="flex-1">
-                {criando ? 'Salvando...' : 'Salvar Anotação'}
+                {criando ? 'Salvando...' : 'Salvar ' + (eTransgressao ? 'Transgressão' : 'Anotação')}
               </Button>
               <Button
                 variant="outline"
@@ -234,6 +404,12 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
                   setMostrarForm(false)
                   setTitulo('')
                   setDescricao('')
+                  setETransgressao(false)
+                  setTipoTransgressaoId('')
+                  setOutrosTitulo('')
+                  setDataEvento('')
+                  setNomeEvento('')
+                  setLocalEvento('')
                 }}
                 className="flex-1"
               >
@@ -251,23 +427,52 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
           {anotacoes.map((anotacao) => (
             <div
               key={anotacao.id}
-              className="bg-fta-dark p-4 rounded-lg border border-white/10"
+              className={`p-4 rounded-lg border ${
+                anotacao.e_transgressao
+                  ? 'bg-red-500/10 border-red-500/30'
+                  : 'bg-fta-dark border-white/10'
+              }`}
             >
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1">
+                  {anotacao.e_transgressao && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs font-medium">
+                        TRANSTREGRESSÃO
+                      </span>
+                      {anotacao.tipo_transgressao && (
+                        <span className="px-2 py-1 bg-white/10 rounded text-xs">
+                          {anotacao.tipo_transgressao.nome}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   {anotacao.titulo && (
                     <h4 className="font-semibold text-white mb-1">{anotacao.titulo}</h4>
                   )}
                   <p className="text-white/80 text-sm whitespace-pre-wrap">{anotacao.descricao}</p>
+                  
+                  {/* Informações adicionais de transgressão */}
+                  {anotacao.e_transgressao && (
+                    <div className="mt-2 space-y-1 text-xs text-white/60">
+                      {anotacao.data_evento && (
+                        <div>Data: {formatarDataEvento(anotacao.data_evento)}</div>
+                      )}
+                      {anotacao.nome_evento && (
+                        <div>Evento: {anotacao.nome_evento}</div>
+                      )}
+                      {anotacao.local_evento && (
+                        <div>Local: {anotacao.local_evento}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={() => excluirAnotacao(anotacao.id!)}
                   className="text-red-400 hover:text-red-300 ml-2 p-1"
                   title="Excluir anotação"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <MdDelete className="w-4 h-4" />
                 </button>
               </div>
               <div className="flex items-center gap-3 text-xs text-white/60 mt-2">
@@ -282,4 +487,3 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
     </div>
   )
 }
-

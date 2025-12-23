@@ -9,6 +9,7 @@ import { CadastroComLink } from './pages/CadastroComLink'
 import { ListaOperadores } from './pages/ListaOperadores'
 import { ListaEquipes } from './pages/ListaEquipes'
 import { RelatorioEquipes } from './pages/RelatorioEquipes'
+import { TiposTransgressoes } from './pages/TiposTransgressoes'
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
                         <Route path="/operadores" element={<ListaOperadores />} />
                         <Route path="/equipes" element={<ListaEquipes />} />
                         <Route path="/relatorio-equipes" element={<ProtectedRoute requireAdmin><RelatorioEquipes /></ProtectedRoute>} />
+                        <Route path="/tipos-transgressoes" element={<ProtectedRoute requireAdmin><TiposTransgressoes /></ProtectedRoute>} />
                         <Route path="*" element={<Navigate to="/login" replace />} />
                       </Routes>
                     </main>

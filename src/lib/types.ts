@@ -55,6 +55,16 @@ export interface CadastroLink {
   nome?: string // Nome/descrição do link para identificação
 }
 
+export interface TipoTransgressao {
+  id?: string
+  nome: string
+  descricao?: string
+  ativo: boolean
+  criado_por: string
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Anotacao {
   id?: string
   tipo: 'equipe' | 'operador'
@@ -66,5 +76,12 @@ export interface Anotacao {
   created_at?: string
   updated_at?: string
   criado_por_nome?: string // Para exibir quem criou
+  // Campos para transgressões
+  e_transgressao?: boolean
+  tipo_transgressao_id?: string
+  tipo_transgressao?: TipoTransgressao // Para join
+  data_evento?: string
+  nome_evento?: string
+  local_evento?: string
 }
 
