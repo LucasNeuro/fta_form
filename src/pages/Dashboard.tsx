@@ -64,7 +64,7 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-fta-dark text-white p-8">
+    <div className="bg-fta-dark text-white p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">FTA Brasil</h1>

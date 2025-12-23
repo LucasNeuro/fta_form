@@ -24,17 +24,19 @@ function App() {
           <Route
             path="/*"
             element={
-              <>
+              <div className="flex flex-col min-h-screen">
                 <Header />
-                <Routes>
-                  <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                  <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
-                  <Route path="/operadores" element={<ProtectedRoute><ListaOperadores /></ProtectedRoute>} />
-                  <Route path="/equipes" element={<ProtectedRoute><ListaEquipes /></ProtectedRoute>} />
-                  <Route path="/relatorio-equipes" element={<ProtectedRoute requireAdmin><RelatorioEquipes /></ProtectedRoute>} />
-                  <Route path="*" element={<Navigate to="/login" replace />} />
-                </Routes>
-              </>
+                <main className="flex-1 overflow-y-auto" style={{ paddingTop: '140px' }}>
+                  <Routes>
+                    <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                    <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
+                    <Route path="/operadores" element={<ProtectedRoute><ListaOperadores /></ProtectedRoute>} />
+                    <Route path="/equipes" element={<ProtectedRoute><ListaEquipes /></ProtectedRoute>} />
+                    <Route path="/relatorio-equipes" element={<ProtectedRoute requireAdmin><RelatorioEquipes /></ProtectedRoute>} />
+                    <Route path="*" element={<Navigate to="/login" replace />} />
+                  </Routes>
+                </main>
+              </div>
             }
           />
         </Routes>
