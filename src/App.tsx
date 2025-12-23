@@ -10,6 +10,8 @@ import { ListaOperadores } from './pages/ListaOperadores'
 import { ListaEquipes } from './pages/ListaEquipes'
 import { RelatorioEquipes } from './pages/RelatorioEquipes'
 import { TiposTransgressoes } from './pages/TiposTransgressoes'
+import { ListaTransgressoes } from './pages/ListaTransgressoes'
+import { Financeiro } from './pages/Financeiro'
 
 function App() {
   return (
@@ -39,6 +41,8 @@ function App() {
                         <Route path="/equipes" element={<ListaEquipes />} />
                         <Route path="/relatorio-equipes" element={<ProtectedRoute requireAdmin><RelatorioEquipes /></ProtectedRoute>} />
                         <Route path="/tipos-transgressoes" element={<ProtectedRoute requireAdmin><TiposTransgressoes /></ProtectedRoute>} />
+                        <Route path="/transgressoes" element={<ProtectedRoute requireAdmin><ListaTransgressoes /></ProtectedRoute>} />
+                        <Route path="/financeiro" element={<ProtectedRoute requireAdmin><Financeiro /></ProtectedRoute>} />
                         <Route path="*" element={<Navigate to="/login" replace />} />
                       </Routes>
                     </main>

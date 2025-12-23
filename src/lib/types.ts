@@ -28,6 +28,10 @@ export interface Equipe {
   ativo?: boolean
   created_at?: string
   updated_at?: string
+  // Campos financeiros
+  pagamento_efetuado?: boolean
+  data_pagamento?: string
+  valor_cobrado?: number
 }
 
 export type UserRole = 'admin' | 'responsavel_equipe' | 'user'
@@ -89,5 +93,8 @@ export interface Anotacao {
     codinome: string
     display: string
   }
+  // Informações adicionais para exibição
+  equipe_nome?: string
+  tipo_transgressao_nome?: string
 }
 
