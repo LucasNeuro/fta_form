@@ -41,16 +41,39 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
 
   const carregarTiposTransgressoes = async () => {
     try {
-      const { data, error } = await supabase
+      console.log('Carregando tipos de transgressões...')
+      
+      // Primeiro tentar sem filtro de ativo para ver todos
+      let query = supabase
         .from('tipos_transgressoes')
         .select('*')
-        .eq('ativo', true)
         .order('nome')
 
-      if (error) throw error
-      if (data) setTiposTransgressoes(data)
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Erro ao carregar tipos de transgressões:', error)
+        console.error('Código do erro:', error.code)
+        console.error('Mensagem:', error.message)
+        console.error('Detalhes:', error.details)
+        throw error
+      }
+
+      console.log('Tipos de transgressões carregados:', data)
+      
+      // Filtrar apenas os ativos no frontend
+      const tiposAtivos = (data || []).filter(tipo => tipo.ativo !== false)
+      console.log('Tipos ativos filtrados:', tiposAtivos)
+      
+      setTiposTransgressoes(tiposAtivos)
+      
+      if (tiposAtivos.length === 0) {
+        console.warn('Nenhum tipo de transgressão ativo encontrado. Verifique se os dados foram inseridos no banco.')
+      }
     } catch (error: any) {
-      console.error('Erro ao carregar tipos de transgressões:', error.message)
+      console.error('Erro ao carregar tipos de transgressões:', error)
+      alert('Erro ao carregar tipos de transgressões: ' + (error.message || 'Erro desconhecido'))
+      setTiposTransgressoes([])
     }
   }
 
@@ -312,7 +335,7 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
                     Tipo de Transgressão *
                   </label>
                   <select
-                    value={tipoTransgressaoId}
+                    value={tipoTransgressaoId || ''}
                     onChange={(e) => {
                       setTipoTransgressaoId(e.target.value)
                       setOutrosTitulo('')
@@ -321,13 +344,22 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
                     required
                   >
                     <option value="">Selecione um tipo...</option>
-                    {tiposTransgressoes.map((tipo) => (
-                      <option key={tipo.id} value={tipo.id}>
-                        {tipo.nome}
-                      </option>
-                    ))}
+                    {tiposTransgressoes.length > 0 ? (
+                      tiposTransgressoes.map((tipo) => (
+                        <option key={tipo.id} value={tipo.id}>
+                          {tipo.nome}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>Carregando tipos...</option>
+                    )}
                     <option value="outros">Outros</option>
                   </select>
+                  {tiposTransgressoes.length === 0 && (
+                    <p className="text-yellow-400 text-xs mt-1">
+                      Nenhum tipo de transgressão encontrado. Verifique se os dados foram inseridos no banco.
+                    </p>
+                  )}
                 </div>
 
                 {tipoTransgressaoId === 'outros' && (
