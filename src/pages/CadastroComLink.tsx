@@ -53,7 +53,14 @@ export const CadastroComLink: React.FC = () => {
 
       if (error || !data) {
         alert('Link inválido ou desativado!')
-        navigate('/')
+        navigate('/login')
+        return
+      }
+
+      // Verificar novamente se o link está ativo (segurança adicional)
+      if (!data.ativo) {
+        alert('Link desativado!')
+        navigate('/login')
         return
       }
 
@@ -73,7 +80,7 @@ export const CadastroComLink: React.FC = () => {
       }
     } catch (error: any) {
       alert('Erro ao validar link: ' + error.message)
-      navigate('/')
+      navigate('/login')
     } finally {
       setLoading(false)
     }
@@ -84,6 +91,27 @@ export const CadastroComLink: React.FC = () => {
     setSaving(true)
 
     try {
+      // Verificar novamente se o link ainda está ativo antes de processar o cadastro
+      if (!link || !link.ativo) {
+        alert('Link inválido ou desativado!')
+        navigate('/login')
+        return
+      }
+
+      // Verificar no banco se o link ainda está ativo (segurança adicional)
+      const { data: linkCheck, error: linkCheckError } = await supabase
+        .from('cadastro_links')
+        .select('ativo')
+        .eq('id', link.id)
+        .eq('token', token)
+        .single()
+
+      if (linkCheckError || !linkCheck || !linkCheck.ativo) {
+        alert('Link foi desativado!')
+        navigate('/login')
+        return
+      }
+
       if (tipo === 'operador') {
         // Cadastrar operador
         const { error } = await supabase
@@ -129,7 +157,8 @@ export const CadastroComLink: React.FC = () => {
         if (linkError) throw linkError
 
         alert('Equipe cadastrada com sucesso!')
-        navigate('/')
+        // Redirecionar para login, não para dashboard/admin
+        navigate('/login')
       }
     } catch (error: any) {
       alert('Erro ao cadastrar: ' + error.message)

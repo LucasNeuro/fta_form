@@ -7,6 +7,7 @@ import { Input } from '../components/UI/Input'
 import { Sideover } from '../components/UI/Sideover'
 import { useAuth } from '../hooks/useAuth'
 import { ListaAnotacoes } from '../components/Anotacoes/ListaAnotacoes'
+import { MdContentCopy, MdCheckCircle, MdCancel } from 'react-icons/md'
 
 export const ListaEquipes: React.FC = () => {
   const { user, isAdmin } = useAuth()
@@ -553,69 +554,81 @@ export const ListaEquipes: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
-                <h3 className="text-lg font-semibold mb-4 text-fta-green">Informações da Equipe</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                  <span className="text-white/60">Capitão:</span>
-                  <p className="text-white font-medium">{equipeSelecionada.capitao}</p>
-                </div>
-                <div>
-                  <span className="text-white/60">Cidade/Estado:</span>
-                  <p className="text-white font-medium">{equipeSelecionada.cidade} / {equipeSelecionada.estado}</p>
-                </div>
-                <div>
-                  <span className="text-white/60">Total de Membros:</span>
-                  <p className="text-white font-medium">{equipeSelecionada.total_membros}</p>
-                </div>
-                <div>
-                  <span className="text-white/60">Membros Ativos:</span>
-                  <p className="text-white font-medium">{equipeSelecionada.ativos}</p>
-                </div>
-                <div>
-                  <span className="text-white/60">Graduação FTA:</span>
-                  <p className="text-white font-medium">{equipeSelecionada.graduacao_fta}</p>
-                </div>
-                <div>
-                  <span className="text-white/60">Membro Desde:</span>
-                  <p className="text-white font-medium">{formatarData(equipeSelecionada.membro_desde)}</p>
-                </div>
-                {equipeSelecionada.instagram && (
-                  <div className="col-span-2">
-                    <span className="text-white/60">Instagram:</span>
-                    <p className="text-white font-medium">
-                      <a 
-                        href={equipeSelecionada.instagram} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-fta-green hover:text-fta-green/80 underline break-all"
-                      >
-                        {equipeSelecionada.instagram}
-                      </a>
+              <div className="bg-fta-gray p-5 rounded-lg border border-white/10">
+                <h3 className="text-lg font-semibold mb-5 text-fta-green">Informações da Equipe</h3>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="space-y-1">
+                    <span className="text-white/60 text-xs uppercase tracking-wide">Capitão</span>
+                    <p className="text-white font-medium text-base">{equipeSelecionada.capitao}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-white/60 text-xs uppercase tracking-wide">Cidade</span>
+                    <p className="text-white font-medium text-base">{equipeSelecionada.cidade}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-white/60 text-xs uppercase tracking-wide">Estado</span>
+                    <p className="text-white font-medium text-base">{equipeSelecionada.estado}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-white/60 text-xs uppercase tracking-wide">Total de Membros</span>
+                    <p className="text-white font-medium text-base">{equipeSelecionada.total_membros}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-white/60 text-xs uppercase tracking-wide">Membros Ativos</span>
+                    <p className="text-white font-medium text-base">
+                      <span className="px-2 py-1 bg-fta-green/20 text-fta-green rounded text-sm font-semibold">
+                        {equipeSelecionada.ativos}
+                      </span>
                     </p>
                   </div>
-                )}
-                <div>
-                  <span className="text-white/60">Status:</span>
-                  <p className={`font-medium ${
-                    equipeSelecionada.ativo !== false ? 'text-fta-green' : 'text-red-400'
-                  }`}>
-                    {equipeSelecionada.ativo !== false ? 'Ativa' : 'Desativada'}
-                  </p>
+                  <div className="space-y-1">
+                    <span className="text-white/60 text-xs uppercase tracking-wide">Graduação FTA</span>
+                    <p className="text-white font-medium text-base">
+                      <span className="px-2 py-1 bg-white/10 rounded text-sm">
+                        {equipeSelecionada.graduacao_fta}
+                      </span>
+                    </p>
                   </div>
+                  <div className="space-y-1">
+                    <span className="text-white/60 text-xs uppercase tracking-wide">Membro Desde</span>
+                    <p className="text-white font-medium text-base">{formatarData(equipeSelecionada.membro_desde)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-white/60 text-xs uppercase tracking-wide">Status</span>
+                    <p className={`font-medium text-base ${
+                      equipeSelecionada.ativo !== false ? 'text-fta-green' : 'text-red-400'
+                    }`}>
+                      {equipeSelecionada.ativo !== false ? 'Ativa' : 'Desativada'}
+                    </p>
+                  </div>
+                  {equipeSelecionada.instagram && (
+                    <div className="col-span-3 space-y-1">
+                      <span className="text-white/60 text-xs uppercase tracking-wide">Instagram</span>
+                      <p className="text-white font-medium text-base">
+                        <a 
+                          href={equipeSelecionada.instagram} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-fta-green hover:text-fta-green/80 underline break-all"
+                        >
+                          {equipeSelecionada.instagram}
+                        </a>
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {/* Links de Operador Criados */}
             {!editando && (
-              <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
-                <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-fta-green">Links de Cadastro de Operador</h3>
-                <Button onClick={() => setMostrarFormLink(!mostrarFormLink)}>
-                  {mostrarFormLink ? 'Cancelar' : '+ Novo Link'}
-                </Button>
-              </div>
+              <div className="bg-fta-gray p-5 rounded-lg border border-white/10">
+                <div className="flex justify-between items-center mb-5">
+                  <h3 className="text-lg font-semibold text-fta-green">Links de Cadastro de Operador</h3>
+                  <Button onClick={() => setMostrarFormLink(!mostrarFormLink)}>
+                    {mostrarFormLink ? 'Cancelar' : '+ Novo Link'}
+                  </Button>
+                </div>
 
               {mostrarFormLink && (
                 <div className="mb-4 p-4 bg-fta-dark rounded-lg border border-fta-green/30">
@@ -653,19 +666,19 @@ export const ListaEquipes: React.FC = () => {
                   {linksEquipe.map((link) => (
                     <div
                       key={link.id}
-                      className={`bg-fta-dark p-3 rounded border ${
+                      className={`bg-fta-dark p-4 rounded-lg border ${
                         link.ativo !== false ? 'border-fta-green/30' : 'border-red-500/30 opacity-60'
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="mb-2">
-                            <p className="font-medium text-white text-sm">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0 space-y-3">
+                          <div>
+                            <p className="font-semibold text-white text-base mb-2">
                               {link.nome || <span className="text-white/40 italic">Sem nome</span>}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className={`text-xs px-2 py-1 rounded ${
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-xs px-3 py-1 rounded font-medium ${
                               link.ativo !== false
                                 ? 'bg-fta-green/20 text-fta-green'
                                 : 'bg-red-500/20 text-red-400'
@@ -673,53 +686,49 @@ export const ListaEquipes: React.FC = () => {
                               {link.ativo !== false ? 'Ativo' : 'Desativado'}
                             </span>
                             {link.ativo !== false && (
-                              <span className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400">
+                              <span className="text-xs px-3 py-1 rounded bg-blue-500/20 text-blue-400 font-medium">
                                 Permite múltiplos cadastros
                               </span>
                             )}
                             {link.created_at && (
-                              <span className="text-white/40 text-xs">
-                                {formatarData(link.created_at)}
+                              <span className="text-white/50 text-xs">
+                                Criado em {formatarData(link.created_at)}
                               </span>
                             )}
                           </div>
-                          <p className="text-fta-green text-xs break-all font-mono mb-1">
-                            {formatarLink(link.token)}
-                          </p>
-                          <p className="text-white/60 text-xs">
+                          <div className="bg-fta-dark/50 p-3 rounded border border-fta-green/20">
+                            <p className="text-fta-green text-sm break-all font-mono">
+                              {formatarLink(link.token)}
+                            </p>
+                          </div>
+                          <p className="text-white/60 text-xs italic">
                             Vários operadores podem usar este link simultaneamente
                           </p>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
                               navigator.clipboard.writeText(formatarLink(link.token))
                               alert('Link copiado!')
                             }}
-                            className="text-white/60 hover:text-white p-1"
+                            className="p-2 text-fta-green hover:bg-fta-green/10 rounded transition-colors"
                             title="Copiar link"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
+                            <MdContentCopy className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => toggleLinkAtivo(link.id!, link.ativo !== false)}
-                            className={`p-1 ${
+                            className={`p-2 rounded transition-colors ${
                               link.ativo !== false
-                                ? 'text-yellow-400 hover:text-yellow-300'
-                                : 'text-fta-green hover:text-fta-green/80'
+                                ? 'text-yellow-400 hover:bg-yellow-400/10'
+                                : 'text-fta-green hover:bg-fta-green/10'
                             }`}
                             title={link.ativo !== false ? 'Desativar link' : 'Ativar link'}
                           >
                             {link.ativo !== false ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                              </svg>
+                              <MdCancel className="w-5 h-5" />
                             ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
+                              <MdCheckCircle className="w-5 h-5" />
                             )}
                           </button>
                         </div>
@@ -733,7 +742,7 @@ export const ListaEquipes: React.FC = () => {
 
             {/* Anotações da Equipe */}
             {!editando && isAdmin && (
-              <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
+              <div className="bg-fta-gray p-5 rounded-lg border border-white/10">
                 <ListaAnotacoes
                   tipo="equipe"
                   equipeId={equipeSelecionada.id}

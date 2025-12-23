@@ -19,7 +19,7 @@ export const Sideover: React.FC<SideoverProps> = ({ isOpen, onClose, title, chil
       />
       
       {/* Sideover */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-fta-dark border-l border-white/10 z-50 shadow-2xl transform transition-transform">
+      <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-fta-dark border-l border-white/10 z-50 shadow-2xl transform transition-transform">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-white/10">
