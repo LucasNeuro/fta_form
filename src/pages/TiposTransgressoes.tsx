@@ -30,11 +30,22 @@ export const TiposTransgressoes: React.FC = () => {
         .select('*')
         .order('nome')
 
-      if (error) throw error
-      if (data) setTipos(data)
+      if (error) {
+        console.error('Erro detalhado:', error)
+        throw error
+      }
+      
+      setTipos(data || [])
+      
+      if (data && data.length > 0) {
+        console.log(`${data.length} tipos de transgressões carregados`)
+      } else {
+        console.log('Nenhum tipo de transgressão encontrado no banco')
+      }
     } catch (error: any) {
       console.error('Erro ao carregar tipos:', error.message)
       alert('Erro ao carregar tipos de transgressões: ' + error.message)
+      setTipos([])
     } finally {
       setLoading(false)
     }
@@ -209,10 +220,15 @@ export const TiposTransgressoes: React.FC = () => {
         )}
 
         {/* Tabela */}
-        {tipos.length === 0 ? (
+        {loading ? (
+          <div className="bg-fta-gray/50 p-12 rounded-xl border border-white/10 text-center">
+            <p className="text-white/60 text-lg">Carregando tipos de transgressões...</p>
+          </div>
+        ) : tipos.length === 0 ? (
           <div className="bg-fta-gray/50 p-12 rounded-xl border border-white/10 text-center">
             <p className="text-white/60 text-lg mb-4">Nenhum tipo de transgressão cadastrado ainda.</p>
-            <p className="text-white/40 text-sm">Clique em "Novo Tipo de Transgressão" para começar.</p>
+            <p className="text-white/40 text-sm mb-6">Clique em "Novo Tipo de Transgressão" para começar.</p>
+            <p className="text-white/40 text-xs">Ou execute o script SQL <code className="bg-fta-dark px-2 py-1 rounded">schema-insert-tipos-transgressoes-padrao.sql</code> para inserir os tipos padrão.</p>
           </div>
         ) : (
           <div className="bg-fta-gray/50 rounded-xl border border-white/10 overflow-hidden">
