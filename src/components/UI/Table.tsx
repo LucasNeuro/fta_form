@@ -5,58 +5,53 @@ interface TableProps {
   className?: string
 }
 
-interface TableHeaderProps {
-  children: React.ReactNode
-}
-
-interface TableRowProps {
-  children: React.ReactNode
-  className?: string
-  onClick?: () => void
-}
-
-interface TableCellProps {
-  children: React.ReactNode
-  className?: string
-}
-
 export const Table: React.FC<TableProps> = ({ children, className = '' }) => {
   return (
-    <div className="overflow-x-auto rounded-lg border border-white/10">
-      <table className={`w-full bg-fta-gray/50 ${className}`}>
+    <div className={`overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)] border border-white/10 rounded-lg ${className}`}>
+      <table className="w-full border-collapse">
         {children}
       </table>
     </div>
   )
 }
 
-export const TableHeader: React.FC<TableHeaderProps> = ({ children }) => {
+export const TableHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <thead className="bg-fta-gray border-b border-white/10">
-      <tr>{children}</tr>
+    <thead className="bg-fta-gray/50 sticky top-0 z-10">
+      <tr className="border-b border-white/10">
+        {children}
+      </tr>
     </thead>
   )
 }
 
-export const TableHeaderCell: React.FC<TableCellProps> = ({ children, className = '' }) => {
+export const TableHeaderCell: React.FC<{ 
+  children: React.ReactNode
+  className?: string
+}> = ({ children, className = '' }) => {
   return (
-    <th className={`px-6 py-4 text-left text-sm font-semibold text-white/80 uppercase tracking-wider ${className}`}>
+    <th className={`px-6 py-4 text-left text-xs font-semibold text-white/80 uppercase tracking-wider ${className}`}>
       {children}
     </th>
   )
 }
 
-export const TableBody: React.FC<TableProps> = ({ children }) => {
-  return <tbody className="divide-y divide-white/10">{children}</tbody>
+export const TableBody: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <tbody className="bg-fta-dark divide-y divide-white/10">
+      {children}
+    </tbody>
+  )
 }
 
-export const TableRow: React.FC<TableRowProps> = ({ children, className = '', onClick }) => {
-  const baseClasses = "hover:bg-fta-light-gray/50 transition-colors"
-  const clickableClasses = onClick ? "cursor-pointer" : ""
-  
+export const TableRow: React.FC<{ 
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}> = ({ children, className = '', onClick }) => {
   return (
     <tr 
-      className={`${baseClasses} ${clickableClasses} ${className}`}
+      className={`hover:bg-white/5 transition-colors ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
     >
       {children}
@@ -64,7 +59,10 @@ export const TableRow: React.FC<TableRowProps> = ({ children, className = '', on
   )
 }
 
-export const TableCell: React.FC<TableCellProps> = ({ children, className = '' }) => {
+export const TableCell: React.FC<{ 
+  children: React.ReactNode
+  className?: string
+}> = ({ children, className = '' }) => {
   return (
     <td className={`px-6 py-4 whitespace-nowrap text-sm text-white ${className}`}>
       {children}

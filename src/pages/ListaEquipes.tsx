@@ -446,7 +446,7 @@ export const ListaEquipes: React.FC = () => {
             {isAdmin && !editando && (
               <div className="flex justify-end">
                 <Button onClick={iniciarEdicao}>
-                  ✏️ Editar Equipe
+                  Editar Equipe
                 </Button>
               </div>
             )}
@@ -672,7 +672,7 @@ export const ListaEquipes: React.FC = () => {
                             </span>
                             {link.ativo !== false && (
                               <span className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400">
-                                🔗 Permite múltiplos cadastros
+                                Permite múltiplos cadastros
                               </span>
                             )}
                             {link.created_at && (
@@ -685,7 +685,7 @@ export const ListaEquipes: React.FC = () => {
                             {formatarLink(link.token)}
                           </p>
                           <p className="text-white/60 text-xs">
-                            💡 Vários operadores podem usar este link simultaneamente
+                            Vários operadores podem usar este link simultaneamente
                           </p>
                         </div>
                         <div className="flex items-center gap-1">

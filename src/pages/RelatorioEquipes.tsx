@@ -241,7 +241,7 @@ export const RelatorioEquipes: React.FC = () => {
               <p className="text-2xl font-bold text-fta-green">{equipesFiltradas.length}</p>
             </div>
             <Button onClick={gerarPDF}>
-              📄 Gerar PDF
+              Gerar PDF
             </Button>
           </div>
         </div>

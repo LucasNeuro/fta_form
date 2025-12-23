@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/UI/Button'
 import { Input } from '../components/UI/Input'
 import { Table, TableHeader, TableHeaderCell, TableBody, TableRow, TableCell } from '../components/UI/Table'
+import { MdContentCopy, MdDelete, MdCheckCircle, MdCancel, MdLink } from 'react-icons/md'
 
 export const AdminPanel: React.FC = () => {
   const { user } = useAuth()
@@ -187,7 +188,8 @@ export const AdminPanel: React.FC = () => {
                 placeholder="Ex: Link para Equipe Alpha"
                 required
               />
-              <Button onClick={criarLinkEquipe}>
+              <Button onClick={criarLinkEquipe} className="flex items-center gap-2">
+                <MdLink className="w-5 h-5" />
                 Gerar Link de Cadastro de Equipe
               </Button>
             </div>
@@ -244,42 +246,36 @@ export const AdminPanel: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
+                        <button
                           onClick={() => copiarLink(link.token, link.tipo)}
-                          className="text-xs py-1 px-2"
+                          className="p-2 text-fta-green hover:bg-fta-green/10 rounded transition-colors"
+                          title="Copiar link"
                         >
-                          Copiar
-                        </Button>
+                          <MdContentCopy className="w-4 h-4" />
+                        </button>
                         {!link.usado && (
                           <button
                             onClick={() => toggleLinkAtivo(link.id, link.ativo !== false)}
-                            className={`p-1 ${
+                            className={`p-2 rounded transition-colors ${
                               link.ativo !== false
-                                ? 'text-yellow-400 hover:text-yellow-300'
-                                : 'text-fta-green hover:text-fta-green/80'
+                                ? 'text-yellow-400 hover:bg-yellow-400/10'
+                                : 'text-fta-green hover:bg-fta-green/10'
                             }`}
                             title={link.ativo !== false ? 'Desativar' : 'Ativar'}
                           >
                             {link.ativo !== false ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                              </svg>
+                              <MdCancel className="w-4 h-4" />
                             ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
+                              <MdCheckCircle className="w-4 h-4" />
                             )}
                           </button>
                         )}
                         <button
                           onClick={() => excluirLink(link.id)}
-                          className="text-red-400 hover:text-red-300 p-1"
+                          className="p-2 text-red-400 hover:bg-red-400/10 rounded transition-colors"
                           title="Excluir"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
+                          <MdDelete className="w-4 h-4" />
                         </button>
                       </div>
                     </TableCell>
@@ -295,7 +291,7 @@ export const AdminPanel: React.FC = () => {
           <ol className="list-decimal list-inside space-y-2 text-white/60 text-sm">
             <li>Crie links de cadastro de equipe e envie para os responsáveis</li>
             <li>Após as equipes serem cadastradas, vá em "Equipes"</li>
-            <li>Clique no ícone de olho (👁️) ao lado de cada equipe</li>
+            <li>Clique no ícone de visualizar ao lado de cada equipe</li>
             <li>No painel lateral, crie links de cadastro de operadores vinculados àquela equipe</li>
             <li>Envie os links para os operadores se cadastrarem</li>
           </ol>
