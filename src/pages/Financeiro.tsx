@@ -4,6 +4,8 @@ import { Equipe, Plano } from '../lib/types'
 import { Table, TableHeader, TableHeaderCell, TableBody, TableRow, TableCell } from '../components/UI/Table'
 import { Button } from '../components/UI/Button'
 import { Input } from '../components/UI/Input'
+import { ToastContainer } from '../components/UI/Toast'
+import { useToast } from '../hooks/useToast'
 import { 
   MdCheckCircle, 
   MdPending, 
@@ -22,6 +24,8 @@ const VALOR_COBRANCA_PADRAO = 65.00 // Valor padrão (será substituído pelo va
 type TabType = 'pagamentos' | 'planos'
 
 export const Financeiro: React.FC = () => {
+  const toast = useToast()
+  
   // Estados para abas
   const [abaAtiva, setAbaAtiva] = useState<TabType>('pagamentos')
   
@@ -67,8 +71,7 @@ export const Financeiro: React.FC = () => {
         setEquipes(equipesMapeadas)
       }
     } catch (error: any) {
-      console.error('Erro ao carregar equipes:', error.message)
-      alert('Erro ao carregar equipes: ' + error.message)
+      toast.error('Erro ao carregar equipes: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -85,8 +88,7 @@ export const Financeiro: React.FC = () => {
       if (error) throw error
       if (data) setPlanos(data)
     } catch (error: any) {
-      console.error('Erro ao carregar planos:', error.message)
-      alert('Erro ao carregar planos: ' + error.message)
+      toast.error('Erro ao carregar planos: ' + error.message)
     } finally {
       setLoadingPlanos(false)
     }
@@ -119,10 +121,23 @@ export const Financeiro: React.FC = () => {
 
       if (error) throw error
 
-      await carregarEquipes()
+      // Atualizar estado localmente sem recarregar
+      setEquipes(prevEquipes => 
+        prevEquipes.map(eq => 
+          eq.id === equipeId 
+            ? { 
+                ...eq, 
+                pagamento_efetuado: novoStatus,
+                data_pagamento: novoStatus ? new Date().toISOString().split('T')[0] : undefined,
+                valor_cobrado: valorCobrado
+              }
+            : eq
+        )
+      )
+
+      toast.success(novoStatus ? 'Pagamento marcado como pago!' : 'Pagamento marcado como pendente!')
     } catch (error: any) {
-      console.error('Erro ao atualizar status de pagamento:', error)
-      alert('Erro ao atualizar status: ' + error.message)
+      toast.error('Erro ao atualizar status: ' + error.message)
     }
   }
 
@@ -142,11 +157,24 @@ export const Financeiro: React.FC = () => {
 
       if (error) throw error
 
-      await carregarEquipes()
-      alert('Plano da equipe atualizado com sucesso!')
+      // Atualizar estado localmente sem recarregar
+      setEquipes(prevEquipes => 
+        prevEquipes.map(eq => 
+          eq.id === equipeId 
+            ? { 
+                ...eq, 
+                plano_id: planoId || undefined,
+                plano: plano || undefined,
+                valor_cobrado: plano?.valor || undefined
+              }
+            : eq
+        )
+      )
+
+      const planoNome = plano ? plano.nome : 'Sem Plano'
+      toast.success(`Plano da equipe atualizado para: ${planoNome}`)
     } catch (error: any) {
-      console.error('Erro ao atualizar plano da equipe:', error)
-      alert('Erro ao atualizar plano: ' + error.message)
+      toast.error('Erro ao atualizar plano: ' + error.message)
     }
   }
 
@@ -154,11 +182,11 @@ export const Financeiro: React.FC = () => {
   const criarPlano = async () => {
     try {
       if (!novoPlano.nome || !novoPlano.valor) {
-        alert('Preencha nome e valor do plano')
+        toast.warning('Preencha nome e valor do plano')
         return
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('planos')
         .insert([{
           nome: novoPlano.nome,
@@ -166,16 +194,21 @@ export const Financeiro: React.FC = () => {
           valor: novoPlano.valor,
           ativo: novoPlano.ativo !== false
         }])
+        .select()
+        .single()
 
       if (error) throw error
 
+      // Atualizar estado localmente
+      if (data) {
+        setPlanos(prev => [...prev, data].sort((a, b) => a.valor - b.valor))
+      }
+
       setNovoPlano({ nome: '', descricao: '', valor: 0, ativo: true })
       setMostrarFormNovoPlano(false)
-      await carregarPlanos()
-      alert('Plano criado com sucesso!')
+      toast.success('Plano criado com sucesso!')
     } catch (error: any) {
-      console.error('Erro ao criar plano:', error)
-      alert('Erro ao criar plano: ' + error.message)
+      toast.error('Erro ao criar plano: ' + error.message)
     }
   }
 
@@ -192,7 +225,7 @@ export const Financeiro: React.FC = () => {
   const salvarEdicaoPlano = async (planoId: string) => {
     try {
       if (!formPlanoEdit.nome || !formPlanoEdit.valor) {
-        alert('Preencha nome e valor do plano')
+        toast.warning('Preencha nome e valor do plano')
         return
       }
 
@@ -208,19 +241,29 @@ export const Financeiro: React.FC = () => {
 
       if (error) throw error
 
+      // Atualizar estado localmente
+      setPlanos(prev => 
+        prev.map(p => 
+          p.id === planoId 
+            ? { ...p, ...formPlanoEdit }
+            : p
+        ).sort((a, b) => a.valor - b.valor)
+      )
+
       setEditandoPlano(null)
       setFormPlanoEdit({})
-      await carregarPlanos()
-      alert('Plano atualizado com sucesso!')
+      toast.success('Plano atualizado com sucesso!')
     } catch (error: any) {
-      console.error('Erro ao atualizar plano:', error)
-      alert('Erro ao atualizar plano: ' + error.message)
+      toast.error('Erro ao atualizar plano: ' + error.message)
     }
   }
 
   const deletarPlano = async (planoId: string) => {
     try {
-      if (!confirm('Tem certeza que deseja deletar este plano? Equipes com este plano terão o plano removido.')) {
+      const plano = planos.find(p => p.id === planoId)
+      const confirmacao = window.confirm(`Tem certeza que deseja deletar o plano "${plano?.nome}"? Equipes com este plano terão o plano removido.`)
+      
+      if (!confirmacao) {
         return
       }
 
@@ -238,28 +281,42 @@ export const Financeiro: React.FC = () => {
 
       if (error) throw error
 
-      await carregarPlanos()
-      await carregarEquipes()
-      alert('Plano deletado com sucesso!')
+      // Atualizar estados localmente
+      setPlanos(prev => prev.filter(p => p.id !== planoId))
+      setEquipes(prevEquipes => 
+        prevEquipes.map(eq => 
+          eq.plano_id === planoId 
+            ? { ...eq, plano_id: undefined, plano: undefined, valor_cobrado: undefined }
+            : eq
+        )
+      )
+
+      toast.success('Plano deletado com sucesso!')
     } catch (error: any) {
-      console.error('Erro ao deletar plano:', error)
-      alert('Erro ao deletar plano: ' + error.message)
+      toast.error('Erro ao deletar plano: ' + error.message)
     }
   }
 
   const toggleStatusPlano = async (planoId: string, statusAtual: boolean) => {
     try {
+      const novoStatus = !statusAtual
       const { error } = await supabase
         .from('planos')
-        .update({ ativo: !statusAtual })
+        .update({ ativo: novoStatus })
         .eq('id', planoId)
 
       if (error) throw error
 
-      await carregarPlanos()
+      // Atualizar estado localmente
+      setPlanos(prev => 
+        prev.map(p => 
+          p.id === planoId ? { ...p, ativo: novoStatus } : p
+        )
+      )
+
+      toast.success(`Plano ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`)
     } catch (error: any) {
-      console.error('Erro ao atualizar status do plano:', error)
-      alert('Erro ao atualizar status: ' + error.message)
+      toast.error('Erro ao atualizar status: ' + error.message)
     }
   }
 
@@ -304,6 +361,7 @@ export const Financeiro: React.FC = () => {
 
   return (
     <div className="bg-fta-dark text-white p-8">
+      <ToastContainer toasts={toast.toasts} onClose={toast.removeToast} />
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Financeiro</h1>
