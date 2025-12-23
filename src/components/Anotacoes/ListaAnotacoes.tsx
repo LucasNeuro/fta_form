@@ -4,7 +4,7 @@ import { Anotacao, TipoTransgressao } from '../../lib/types'
 import { Button } from '../UI/Button'
 import { Input } from '../UI/Input'
 import { useAuth } from '../../hooks/useAuth'
-import { MdDelete } from 'react-icons/md'
+import { MdDelete, MdEvent, MdLocationOn, MdPerson, MdTitle } from 'react-icons/md'
 
 interface ListaAnotacoesProps {
   tipo: 'equipe' | 'operador'
@@ -127,12 +127,35 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
           }
         }
         
-        // Mapear anotações com email do criador e tipo de transgressão
-        const anotacoesComCriador = data.map((anot: any) => ({
-          ...anot,
-          criado_por_nome: usersMap.get(anot.criado_por) || 'Desconhecido',
-          tipo_transgressao: anot.tipo_transgressao_id ? tiposMap.get(anot.tipo_transgressao_id) || null : null
-        }))
+        // Buscar dados dos operadores se houver referências
+        const operadorIds = [...new Set(data.filter((anot: any) => anot.operador_id).map((anot: any) => anot.operador_id))]
+        let operadoresMap = new Map()
+        
+        if (operadorIds.length > 0) {
+          const { data: operadoresData } = await supabase
+            .from('operadores')
+            .select('id, nome, codinome')
+            .in('id', operadorIds)
+          
+          if (operadoresData) {
+            operadoresMap = new Map(operadoresData.map(op => [
+              op.id, 
+              { nome: op.nome, codinome: op.codinome, display: op.codinome ? `${op.nome} (${op.codinome})` : op.nome }
+            ]))
+          }
+        }
+        
+        // Mapear anotações com email do criador, dados do operador e tipo de transgressão
+        const anotacoesComCriador = data.map((anot: any) => {
+          const operadorInfo = anot.operador_id ? operadoresMap.get(anot.operador_id) : null
+          
+          return {
+            ...anot,
+            criado_por_nome: usersMap.get(anot.criado_por) || 'Desconhecido',
+            tipo_transgressao: anot.tipo_transgressao_id ? tiposMap.get(anot.tipo_transgressao_id) || null : null,
+            operador_info: operadorInfo
+          }
+        })
         
         setAnotacoes(anotacoesComCriador)
       }
@@ -515,7 +538,7 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1">
                   {anotacao.e_transgressao && (
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-3">
                       <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs font-medium">
                         TRANSTREGRESSÃO
                       </span>
@@ -527,28 +550,73 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
                     </div>
                   )}
                   {anotacao.titulo && (
-                    <h4 className="font-semibold text-white mb-1">{anotacao.titulo}</h4>
+                    <h4 className="font-semibold text-white mb-3">{anotacao.titulo}</h4>
                   )}
-                  <p className="text-white/80 text-sm whitespace-pre-wrap">{anotacao.descricao}</p>
                   
-                  {/* Informações adicionais de transgressão */}
-                  {anotacao.e_transgressao && (
-                    <div className="mt-2 space-y-1 text-xs text-white/60">
+                  {/* Exibição de transgressão com campos organizados */}
+                  {anotacao.e_transgressao ? (
+                    <div className="space-y-2">
+                      {/* Informações do operador (se for de operador) */}
+                      {anotacao.operador_id && anotacao.operador_info && (
+                        <div className="flex items-start gap-2 text-white/90 text-sm">
+                          <MdPerson className="w-4 h-4 text-white/60 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="text-white/60 text-xs">Operador: </span>
+                            <span className="font-medium">{anotacao.operador_info.display}</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Data do evento */}
                       {anotacao.data_evento && (
-                        <div>Data: {formatarDataEvento(anotacao.data_evento)}</div>
+                        <div className="flex items-start gap-2 text-white/90 text-sm">
+                          <MdEvent className="w-4 h-4 text-white/60 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="text-white/60 text-xs">Data: </span>
+                            <span className="font-medium">{formatarDataEvento(anotacao.data_evento)}</span>
+                          </div>
+                        </div>
                       )}
+                      
+                      {/* Nome do evento */}
                       {anotacao.nome_evento && (
-                        <div>Evento: {anotacao.nome_evento}</div>
+                        <div className="flex items-start gap-2 text-white/90 text-sm">
+                          <MdTitle className="w-4 h-4 text-white/60 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="text-white/60 text-xs">Evento: </span>
+                            <span className="font-medium">{anotacao.nome_evento}</span>
+                          </div>
+                        </div>
                       )}
+                      
+                      {/* Local do evento */}
                       {anotacao.local_evento && (
-                        <div>Local: {anotacao.local_evento}</div>
+                        <div className="flex items-start gap-2 text-white/90 text-sm">
+                          <MdLocationOn className="w-4 h-4 text-white/60 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="text-white/60 text-xs">Local: </span>
+                            <span className="font-medium">{anotacao.local_evento}</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Observação adicional (se houver na descrição) */}
+                      {anotacao.descricao && anotacao.descricao.includes('Observação:') && (
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <p className="text-white/80 text-sm whitespace-pre-wrap">
+                            {anotacao.descricao.split('Observação:')[1]?.trim() || ''}
+                          </p>
+                        </div>
                       )}
                     </div>
+                  ) : (
+                    /* Anotação normal - mostrar descrição completa */
+                    <p className="text-white/80 text-sm whitespace-pre-wrap">{anotacao.descricao}</p>
                   )}
                 </div>
                 <button
                   onClick={() => excluirAnotacao(anotacao.id!)}
-                  className="text-red-400 hover:text-red-300 ml-2 p-1"
+                  className="text-red-400 hover:text-red-300 ml-2 p-1 flex-shrink-0"
                   title="Excluir anotação"
                 >
                   <MdDelete className="w-4 h-4" />
