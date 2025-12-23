@@ -115,7 +115,11 @@ export const ListaOperadores: React.FC = () => {
 
     // Filtro por equipe
     if (filtroEquipe) {
-      filtrados = filtrados.filter(op => op.equipe_id === filtroEquipe)
+      if (filtroEquipe === 'sem-equipe') {
+        filtrados = filtrados.filter(op => !op.equipe_id)
+      } else {
+        filtrados = filtrados.filter(op => op.equipe_id === filtroEquipe)
+      }
     }
 
     // Filtro por cidade
