@@ -71,37 +71,6 @@ export const AdminPanel: React.FC = () => {
     }
   }
 
-  const aplicarFiltros = (linksParaFiltrar: any[], nome: string, status: string) => {
-    let filtrados = [...linksParaFiltrar]
-
-    // Filtro por nome
-    if (nome.trim()) {
-      filtrados = filtrados.filter(link => 
-        link.nome?.toLowerCase().includes(nome.toLowerCase().trim())
-      )
-    }
-
-    // Filtro por status
-    if (status !== 'todos') {
-      filtrados = filtrados.filter(link => {
-        if (status === 'usado') {
-          return link.usado === true
-        } else if (status === 'ativo') {
-          return link.ativo !== false && !link.usado
-        } else if (status === 'desativado') {
-          return link.ativo === false
-        }
-        return true
-      })
-    }
-
-    setLinksFiltrados(filtrados)
-  }
-
-  useEffect(() => {
-    aplicarFiltros(links, filtroNome, filtroStatus)
-  }, [filtroNome, filtroStatus])
-
   const criarLinkEquipe = async () => {
     try {
       if (!user) {
