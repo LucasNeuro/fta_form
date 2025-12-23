@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { Operador } from '../lib/types'
 import { Table, TableHeader, TableHeaderCell, TableBody, TableRow, TableCell } from '../components/UI/Table'
+import { Sideover } from '../components/UI/Sideover'
+import { ListaAnotacoes } from '../components/Anotacoes/ListaAnotacoes'
+import { useAuth } from '../hooks/useAuth'
 
 interface OperadorComEquipe extends Operador {
   equipe?: {
@@ -10,8 +13,11 @@ interface OperadorComEquipe extends Operador {
 }
 
 export const ListaOperadores: React.FC = () => {
+  const { isAdmin } = useAuth()
   const [operadores, setOperadores] = useState<OperadorComEquipe[]>([])
   const [loading, setLoading] = useState(true)
+  const [operadorSelecionado, setOperadorSelecionado] = useState<OperadorComEquipe | null>(null)
+  const [sideoverAberto, setSideoverAberto] = useState(false)
 
   useEffect(() => {
     carregarOperadores()
@@ -72,6 +78,16 @@ export const ListaOperadores: React.FC = () => {
     return idade
   }
 
+  const abrirSideover = (operador: OperadorComEquipe) => {
+    setOperadorSelecionado(operador)
+    setSideoverAberto(true)
+  }
+
+  const formatarData = (data: string) => {
+    if (!data) return '-'
+    return new Date(data).toLocaleDateString('pt-BR')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-fta-dark text-white p-8 flex items-center justify-center">
@@ -103,6 +119,7 @@ export const ListaOperadores: React.FC = () => {
               <TableHeaderCell>Idade</TableHeaderCell>
               <TableHeaderCell>LAB FTA</TableHeaderCell>
               <TableHeaderCell>Equipe</TableHeaderCell>
+              {isAdmin && <TableHeaderCell>Ações</TableHeaderCell>}
             </TableHeader>
             <TableBody>
               {operadores.map((operador) => (
@@ -131,6 +148,20 @@ export const ListaOperadores: React.FC = () => {
                       <span className="text-white/40 text-xs">Sem equipe</span>
                     )}
                   </TableCell>
+                  {isAdmin && (
+                    <TableCell>
+                      <button
+                        onClick={() => abrirSideover(operador)}
+                        className="text-fta-green hover:text-fta-green/80 transition-colors p-2"
+                        title="Ver detalhes e anotações"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -141,6 +172,72 @@ export const ListaOperadores: React.FC = () => {
           Total: {operadores.length} operador{operadores.length !== 1 ? 'es' : ''}
         </div>
       </div>
+
+      {/* Sideover para ver operador e anotações */}
+      <Sideover
+        isOpen={sideoverAberto}
+        onClose={() => {
+          setSideoverAberto(false)
+          setOperadorSelecionado(null)
+        }}
+        title={operadorSelecionado ? `Operador: ${operadorSelecionado.nome}` : 'Detalhes do Operador'}
+      >
+        {operadorSelecionado && (
+          <div className="space-y-6">
+            {/* Detalhes do Operador */}
+            <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
+              <h3 className="text-lg font-semibold mb-4 text-fta-green">Informações do Operador</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-white/60">Codinome:</span>
+                  <p className="text-white font-medium">{operadorSelecionado.codinome}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Email:</span>
+                  <p className="text-white font-medium">{operadorSelecionado.email}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Telefone:</span>
+                  <p className="text-white font-medium">{operadorSelecionado.telefone}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Cidade/Estado:</span>
+                  <p className="text-white font-medium">{operadorSelecionado.cidade} / {operadorSelecionado.estado}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Idade:</span>
+                  <p className="text-white font-medium">{calcularIdade(operadorSelecionado.nascimento)} anos</p>
+                </div>
+                <div>
+                  <span className="text-white/60">LAB FTA:</span>
+                  <p className="text-white font-medium">{operadorSelecionado.lab_fta || 0}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Equipe:</span>
+                  <p className="text-white font-medium">
+                    {operadorSelecionado.equipe?.nome || 'Sem equipe'}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-white/60">Data de Nascimento:</span>
+                  <p className="text-white font-medium">{formatarData(operadorSelecionado.nascimento)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Anotações do Operador */}
+            {isAdmin && (
+              <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
+                <ListaAnotacoes
+                  tipo="operador"
+                  operadorId={operadorSelecionado.id}
+                  operadorEquipeId={operadorSelecionado.equipe_id}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </Sideover>
     </div>
   )
 }

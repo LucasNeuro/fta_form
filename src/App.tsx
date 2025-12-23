@@ -7,6 +7,7 @@ import { AdminPanel } from './pages/AdminPanel'
 import { CadastroComLink } from './pages/CadastroComLink'
 import { ListaOperadores } from './pages/ListaOperadores'
 import { ListaEquipes } from './pages/ListaEquipes'
+import { RelatorioEquipes } from './pages/RelatorioEquipes'
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
                   <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
                   <Route path="/operadores" element={<ProtectedRoute><ListaOperadores /></ProtectedRoute>} />
                   <Route path="/equipes" element={<ProtectedRoute><ListaEquipes /></ProtectedRoute>} />
+                  <Route path="/relatorio-equipes" element={<ProtectedRoute requireAdmin><RelatorioEquipes /></ProtectedRoute>} />
                   <Route path="*" element={<Navigate to="/login" replace />} />
                 </Routes>
               </>

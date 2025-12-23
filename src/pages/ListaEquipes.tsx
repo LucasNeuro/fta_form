@@ -6,6 +6,7 @@ import { Button } from '../components/UI/Button'
 import { Input } from '../components/UI/Input'
 import { Sideover } from '../components/UI/Sideover'
 import { useAuth } from '../hooks/useAuth'
+import { ListaAnotacoes } from '../components/Anotacoes/ListaAnotacoes'
 
 export const ListaEquipes: React.FC = () => {
   const { user, isAdmin } = useAuth()
@@ -17,10 +18,11 @@ export const ListaEquipes: React.FC = () => {
   const [carregandoLinks, setCarregandoLinks] = useState(false)
   const [nomeLinkOperador, setNomeLinkOperador] = useState<string>('')
   const [mostrarFormLink, setMostrarFormLink] = useState(false)
+  const [editando, setEditando] = useState(false)
+  const [formEditEquipe, setFormEditEquipe] = useState<Partial<Equipe>>({})
+  const [salvando, setSalvando] = useState(false)
+  const [ordemData, setOrdemData] = useState<'crescente' | 'decrescente' | null>(null)
 
-  useEffect(() => {
-    carregarEquipes()
-  }, [])
 
   useEffect(() => {
     if (equipeSelecionada) {
@@ -31,10 +33,20 @@ export const ListaEquipes: React.FC = () => {
   const carregarEquipes = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      let query = supabase
         .from('equipes')
         .select('*')
-        .order('nome')
+      
+      // Ordenação
+      if (ordemData === 'crescente') {
+        query = query.order('membro_desde', { ascending: true })
+      } else if (ordemData === 'decrescente') {
+        query = query.order('membro_desde', { ascending: false })
+      } else {
+        query = query.order('nome')
+      }
+      
+      const { data, error } = await query
       
       if (error) throw error
       if (data) setEquipes(data)
@@ -45,6 +57,10 @@ export const ListaEquipes: React.FC = () => {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    carregarEquipes()
+  }, [ordemData])
 
   const carregarLinksEquipe = async () => {
     if (!equipeSelecionada) return
@@ -69,7 +85,82 @@ export const ListaEquipes: React.FC = () => {
 
   const abrirSideover = (equipe: Equipe) => {
     setEquipeSelecionada(equipe)
+    setEditando(false)
+    setFormEditEquipe({})
     setSideoverAberto(true)
+  }
+
+  const iniciarEdicao = () => {
+    if (equipeSelecionada) {
+      setFormEditEquipe({
+        nome: equipeSelecionada.nome,
+        total_membros: equipeSelecionada.total_membros,
+        ativos: equipeSelecionada.ativos,
+        capitao: equipeSelecionada.capitao,
+        cidade: equipeSelecionada.cidade,
+        estado: equipeSelecionada.estado,
+        membro_desde: equipeSelecionada.membro_desde,
+        historico_transgressoes: equipeSelecionada.historico_transgressoes || '',
+        graduacao_fta: equipeSelecionada.graduacao_fta,
+        instagram: equipeSelecionada.instagram || ''
+      })
+      setEditando(true)
+    }
+  }
+
+  const cancelarEdicao = () => {
+    setEditando(false)
+    setFormEditEquipe({})
+  }
+
+  const salvarEdicao = async () => {
+    if (!equipeSelecionada?.id) return
+
+    try {
+      setSalvando(true)
+      
+      const dadosAtualizados: Partial<Equipe> = {
+        nome: formEditEquipe.nome,
+        total_membros: formEditEquipe.total_membros,
+        ativos: formEditEquipe.ativos,
+        capitao: formEditEquipe.capitao,
+        cidade: formEditEquipe.cidade,
+        estado: formEditEquipe.estado,
+        membro_desde: formEditEquipe.membro_desde,
+        historico_transgressoes: formEditEquipe.historico_transgressoes || undefined,
+        graduacao_fta: formEditEquipe.graduacao_fta,
+        instagram: formEditEquipe.instagram || undefined
+      }
+
+      const { error } = await supabase
+        .from('equipes')
+        .update(dadosAtualizados)
+        .eq('id', equipeSelecionada.id)
+
+      if (error) throw error
+
+      alert('Equipe atualizada com sucesso!')
+      await carregarEquipes()
+      
+      // Atualizar equipe selecionada
+      const { data: equipeAtualizada } = await supabase
+        .from('equipes')
+        .select('*')
+        .eq('id', equipeSelecionada.id)
+        .single()
+
+      if (equipeAtualizada) {
+        setEquipeSelecionada(equipeAtualizada)
+      }
+      
+      setEditando(false)
+      setFormEditEquipe({})
+    } catch (error: any) {
+      console.error('Erro ao atualizar equipe:', error)
+      alert('Erro ao atualizar equipe: ' + error.message)
+    } finally {
+      setSalvando(false)
+    }
   }
 
   const criarLinkOperador = async () => {
@@ -210,6 +301,21 @@ export const ListaEquipes: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-4xl font-bold">Equipes Cadastradas</h1>
+            <div className="flex items-center gap-4">
+              <label className="text-white/80 text-sm">Ordenar por data de entrada:</label>
+              <select
+                value={ordemData || ''}
+                onChange={(e) => {
+                  const valor = e.target.value
+                  setOrdemData(valor ? (valor as 'crescente' | 'decrescente') : null)
+                }}
+                className="px-4 py-2 bg-fta-gray border border-white/20 rounded-lg text-white focus:outline-none focus:border-fta-green"
+              >
+                <option value="">Padrão (nome)</option>
+                <option value="crescente">Mais antigas primeiro</option>
+                <option value="decrescente">Mais recentes primeiro</option>
+              </select>
+            </div>
           </div>
 
           {equipes.length === 0 ? (
@@ -336,11 +442,119 @@ export const ListaEquipes: React.FC = () => {
       >
         {equipeSelecionada && (
           <div className="space-y-6">
-            {/* Detalhes da Equipe */}
-            <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
-              <h3 className="text-lg font-semibold mb-4 text-fta-green">Informações da Equipe</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
+            {/* Botão de Editar */}
+            {isAdmin && !editando && (
+              <div className="flex justify-end">
+                <Button onClick={iniciarEdicao}>
+                  ✏️ Editar Equipe
+                </Button>
+              </div>
+            )}
+
+            {/* Detalhes da Equipe ou Formulário de Edição */}
+            {editando ? (
+              <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
+                <h3 className="text-lg font-semibold mb-4 text-fta-green">Editar Equipe</h3>
+                <div className="space-y-4">
+                  <Input
+                    label="Nome da Equipe *"
+                    value={formEditEquipe.nome || ''}
+                    onChange={(e) => setFormEditEquipe({ ...formEditEquipe, nome: e.target.value })}
+                    required
+                  />
+                  <Input
+                    label="Capitão *"
+                    value={formEditEquipe.capitao || ''}
+                    onChange={(e) => setFormEditEquipe({ ...formEditEquipe, capitao: e.target.value })}
+                    required
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="Total de Membros *"
+                      type="number"
+                      min="0"
+                      value={formEditEquipe.total_membros || 0}
+                      onChange={(e) => setFormEditEquipe({ ...formEditEquipe, total_membros: parseInt(e.target.value) || 0 })}
+                      required
+                    />
+                    <Input
+                      label="Membros Ativos *"
+                      type="number"
+                      min="0"
+                      value={formEditEquipe.ativos || 0}
+                      onChange={(e) => setFormEditEquipe({ ...formEditEquipe, ativos: parseInt(e.target.value) || 0 })}
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="Cidade *"
+                      value={formEditEquipe.cidade || ''}
+                      onChange={(e) => setFormEditEquipe({ ...formEditEquipe, cidade: e.target.value })}
+                      required
+                    />
+                    <Input
+                      label="Estado *"
+                      value={formEditEquipe.estado || ''}
+                      onChange={(e) => setFormEditEquipe({ ...formEditEquipe, estado: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <Input
+                    label="Data de Membro Desde *"
+                    type="date"
+                    value={formEditEquipe.membro_desde || ''}
+                    onChange={(e) => setFormEditEquipe({ ...formEditEquipe, membro_desde: e.target.value })}
+                    required
+                  />
+                  <div>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Graduação FTA *
+                    </label>
+                    <select
+                      value={formEditEquipe.graduacao_fta || 'Cadete'}
+                      onChange={(e) => setFormEditEquipe({ ...formEditEquipe, graduacao_fta: e.target.value as any })}
+                      className="w-full px-4 py-2 bg-fta-dark border border-white/20 rounded-lg text-white focus:outline-none focus:border-fta-green"
+                    >
+                      <option value="Cadete">Cadete</option>
+                      <option value="Efetivo">Efetivo</option>
+                      <option value="Graduado">Graduado</option>
+                      <option value="Estado Maior">Estado Maior</option>
+                      <option value="Conselheiro">Conselheiro</option>
+                    </select>
+                  </div>
+                  <Input
+                    label="Link do Instagram"
+                    type="url"
+                    value={formEditEquipe.instagram || ''}
+                    onChange={(e) => setFormEditEquipe({ ...formEditEquipe, instagram: e.target.value })}
+                  />
+                  <div>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Histórico de Transgressões
+                    </label>
+                    <textarea
+                      value={formEditEquipe.historico_transgressoes || ''}
+                      onChange={(e) => setFormEditEquipe({ ...formEditEquipe, historico_transgressoes: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-2 bg-fta-dark border border-white/20 rounded-lg text-white focus:outline-none focus:border-fta-green resize-none"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button onClick={salvarEdicao} disabled={salvando} className="flex-1">
+                      {salvando ? 'Salvando...' : 'Salvar Alterações'}
+                    </Button>
+                    <Button variant="outline" onClick={cancelarEdicao} className="flex-1">
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
+                <h3 className="text-lg font-semibold mb-4 text-fta-green">Informações da Equipe</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
                   <span className="text-white/60">Capitão:</span>
                   <p className="text-white font-medium">{equipeSelecionada.capitao}</p>
                 </div>
@@ -386,13 +600,15 @@ export const ListaEquipes: React.FC = () => {
                   }`}>
                     {equipeSelecionada.ativo !== false ? 'Ativa' : 'Desativada'}
                   </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Links de Operador Criados */}
-            <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
-              <div className="flex justify-between items-center mb-4">
+            {!editando && (
+              <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
+                <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-fta-green">Links de Cadastro de Operador</h3>
                 <Button onClick={() => setMostrarFormLink(!mostrarFormLink)}>
                   {mostrarFormLink ? 'Cancelar' : '+ Novo Link'}
@@ -510,7 +726,18 @@ export const ListaEquipes: React.FC = () => {
                   ))}
                 </div>
               )}
-            </div>
+              </div>
+            )}
+
+            {/* Anotações da Equipe */}
+            {!editando && isAdmin && (
+              <div className="bg-fta-gray p-4 rounded-lg border border-white/10">
+                <ListaAnotacoes
+                  tipo="equipe"
+                  equipeId={equipeSelecionada.id}
+                />
+              </div>
+            )}
           </div>
         )}
       </Sideover>

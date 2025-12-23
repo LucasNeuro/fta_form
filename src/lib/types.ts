@@ -55,3 +55,16 @@ export interface CadastroLink {
   nome?: string // Nome/descrição do link para identificação
 }
 
+export interface Anotacao {
+  id?: string
+  tipo: 'equipe' | 'operador'
+  equipe_id?: string
+  operador_id?: string
+  titulo?: string
+  descricao: string
+  criado_por: string
+  created_at?: string
+  updated_at?: string
+  criado_por_nome?: string // Para exibir quem criou
+}
+

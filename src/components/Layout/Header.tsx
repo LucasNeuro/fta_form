@@ -91,6 +91,19 @@ export const Header: React.FC = () => {
             >
               Equipes
             </Link>
+
+            {isAdmin && (
+              <Link
+                to="/relatorio-equipes"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive('/relatorio-equipes')
+                    ? 'bg-fta-green text-white'
+                    : 'text-white/80 hover:text-fta-green'
+                }`}
+              >
+                Relatório Equipes
+              </Link>
+            )}
           </nav>
         )}
       </div>
