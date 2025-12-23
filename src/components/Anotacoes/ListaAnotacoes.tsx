@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { Anotacao, TipoTransgressao } from '../../lib/types'
 import { Button } from '../UI/Button'
 import { Input } from '../UI/Input'
+import { useAuth } from '../../hooks/useAuth'
 import { MdDelete } from 'react-icons/md'
 
 interface ListaAnotacoesProps {
@@ -20,6 +21,7 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
   operadorEquipeId,
   onAnotacaoCriada
 }) => {
+  const { user } = useAuth()
   const [anotacoes, setAnotacoes] = useState<Anotacao[]>([])
   const [tiposTransgressoes, setTiposTransgressoes] = useState<TipoTransgressao[]>([])
   const [loading, setLoading] = useState(true)
@@ -170,18 +172,16 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
     try {
       setCriando(true)
       
-      // Buscar usuário atual
-      const userStr = localStorage.getItem('user')
-      if (!userStr) {
+      // Verificar se usuário está logado
+      if (!user || !user.id) {
         alert('Você precisa estar logado!')
         return
       }
-      const user = JSON.parse(userStr)
 
       const anotacaoData: any = {
         tipo,
         descricao: eTransgressao 
-          ? `Data: ${dataEvento} | Evento: ${nomeEvento.trim()} | Local: ${localEvento.trim()}`
+          ? `Data: ${dataEvento}\nEvento: ${nomeEvento.trim()}\nLocal: ${localEvento.trim()}`
           : descricao.trim(),
         criado_por: user.id,
         titulo: eTransgressao 
@@ -213,18 +213,33 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
       if (error) throw error
 
       // Se for anotação de operador e tiver equipe_id, criar também na equipe
-      if (tipo === 'operador' && operadorEquipeId) {
-        const anotacaoEquipeData = {
-          ...anotacaoData,
+      if (tipo === 'operador' && operadorEquipeId && eTransgressao) {
+        const tipoTransgressaoNome = tipoTransgressaoId === 'outros' 
+          ? outrosTitulo.trim() 
+          : tiposTransgressoes.find(t => t.id === tipoTransgressaoId)?.nome || 'Transgressão'
+        
+        const anotacaoEquipeData: any = {
           tipo: 'equipe' as const,
           equipe_id: operadorEquipeId,
           operador_id: null,
-          descricao: `[Operador] ${anotacaoData.descricao}`
+          e_transgressao: true,
+          tipo_transgressao_id: tipoTransgressaoId === 'outros' ? null : tipoTransgressaoId,
+          titulo: `[Operador] ${tipoTransgressaoNome}`,
+          descricao: `Operador: ${operadorId}\nData: ${dataEvento}\nEvento: ${nomeEvento.trim()}\nLocal: ${localEvento.trim()}${descricao.trim() ? `\nObservação: ${descricao.trim()}` : ''}`,
+          criado_por: user.id,
+          data_evento: dataEvento,
+          nome_evento: nomeEvento.trim(),
+          local_evento: localEvento.trim()
         }
 
-        await supabase
+        const { error: errorEquipe } = await supabase
           .from('anotacoes')
           .insert([anotacaoEquipeData])
+        
+        if (errorEquipe) {
+          console.error('Erro ao copiar anotação para equipe:', errorEquipe)
+          // Não interromper o fluxo, apenas logar o erro
+        }
       }
 
       // Limpar formulário
