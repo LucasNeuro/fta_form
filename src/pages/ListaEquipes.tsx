@@ -8,6 +8,7 @@ import { Sideover } from '../components/UI/Sideover'
 import { useAuth } from '../hooks/useAuth'
 import { ListaAnotacoes } from '../components/Anotacoes/ListaAnotacoes'
 import { MdContentCopy, MdCheckCircle, MdCancel } from 'react-icons/md'
+import { FaInstagram } from 'react-icons/fa'
 
 export const ListaEquipes: React.FC = () => {
   const { user, isAdmin } = useAuth()
@@ -602,18 +603,17 @@ export const ListaEquipes: React.FC = () => {
                     </p>
                   </div>
                   {equipeSelecionada.instagram && (
-                    <div className="col-span-3 space-y-1">
-                      <span className="text-white/60 text-xs uppercase tracking-wide">Instagram</span>
-                      <p className="text-white font-medium text-base">
-                        <a 
-                          href={equipeSelecionada.instagram} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-fta-green hover:text-fta-green/80 underline break-all"
-                        >
-                          {equipeSelecionada.instagram}
-                        </a>
-                      </p>
+                    <div className="col-span-3 space-y-2">
+                      <span className="text-white/60 text-xs uppercase tracking-wide block">Instagram</span>
+                      <a 
+                        href={equipeSelecionada.instagram} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg transition-all font-medium text-sm"
+                      >
+                        <FaInstagram className="w-5 h-5" />
+                        <span>Ver Instagram</span>
+                      </a>
                     </div>
                   )}
                 </div>
