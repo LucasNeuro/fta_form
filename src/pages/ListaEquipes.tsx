@@ -327,102 +327,136 @@ export const ListaEquipes: React.FC = () => {
             </div>
           ) : (
             <div className="bg-fta-gray/50 rounded-xl border border-white/10 overflow-hidden">
-              <Table>
-                <TableHeader>
-                <TableHeaderCell>Nome</TableHeaderCell>
-                <TableHeaderCell>Capitão</TableHeaderCell>
-                <TableHeaderCell>Total Membros</TableHeaderCell>
-                <TableHeaderCell>Ativos</TableHeaderCell>
-                <TableHeaderCell>Cidade / Estado</TableHeaderCell>
-                <TableHeaderCell>Graduação FTA</TableHeaderCell>
-                <TableHeaderCell>Membro Desde</TableHeaderCell>
-                <TableHeaderCell>Status</TableHeaderCell>
-                {isAdmin && <TableHeaderCell>Ações</TableHeaderCell>}
-              </TableHeader>
-              <TableBody>
-                {equipes.map((equipe) => (
-                  <TableRow key={equipe.id}>
-                    <TableCell className="font-medium">{equipe.nome}</TableCell>
-                    <TableCell>{equipe.capitao}</TableCell>
-                    <TableCell>{equipe.total_membros}</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 bg-fta-green/20 text-fta-green rounded text-xs font-medium">
-                        {equipe.ativos}
-                      </span>
-                    </TableCell>
-                    <TableCell>{equipe.cidade} / {equipe.estado}</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 bg-white/10 rounded text-xs">
-                        {equipe.graduacao_fta}
-                      </span>
-                    </TableCell>
-                    <TableCell>{formatarData(equipe.membro_desde)}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        equipe.ativo !== false 
-                          ? 'bg-fta-green/20 text-fta-green' 
-                          : 'bg-red-500/20 text-red-400'
-                      }`}>
-                        {equipe.ativo !== false ? 'Ativa' : 'Desativada'}
-                      </span>
-                    </TableCell>
-                    {isAdmin && (
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              abrirSideover(equipe)
-                            }}
-                            className="text-fta-green hover:text-fta-green/80 transition-colors p-2"
-                            title="Ver detalhes e criar link"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              toggleEquipeAtivo(equipe.id!, equipe.ativo !== false)
-                            }}
-                            className={`p-2 transition-colors ${
-                              equipe.ativo !== false
-                                ? 'text-yellow-400 hover:text-yellow-300'
-                                : 'text-fta-green hover:text-fta-green/80'
-                            }`}
-                            title={equipe.ativo !== false ? 'Desativar equipe' : 'Ativar equipe'}
-                          >
-                            {equipe.ativo !== false ? (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                              </svg>
-                            ) : (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            )}
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              excluirEquipe(equipe.id!)
-                            }}
-                            className="text-red-400 hover:text-red-300 transition-colors p-2"
-                            title="Excluir equipe"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableHeaderCell className="min-w-[150px]">Nome</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[120px]">Capitão</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[100px]">Total Membros</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[80px]">Ativos</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[120px]">Cidade</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[80px]">Estado</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[100px]">Membro Desde</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[120px]">Graduação FTA</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[200px]">Histórico Transgressões</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[150px]">Instagram</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[120px]">Criado Em</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[120px]">Atualizado Em</TableHeaderCell>
+                    <TableHeaderCell className="min-w-[100px]">Status</TableHeaderCell>
+                    {isAdmin && <TableHeaderCell className="min-w-[120px]">Ações</TableHeaderCell>}
+                  </TableHeader>
+                  <TableBody>
+                    {equipes.map((equipe) => (
+                      <TableRow key={equipe.id}>
+                        <TableCell className="font-medium whitespace-nowrap">{equipe.nome}</TableCell>
+                        <TableCell className="whitespace-nowrap">{equipe.capitao}</TableCell>
+                        <TableCell className="whitespace-nowrap">{equipe.total_membros}</TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <span className="px-2 py-1 bg-fta-green/20 text-fta-green rounded text-xs font-medium">
+                            {equipe.ativos}
+                          </span>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">{equipe.cidade}</TableCell>
+                        <TableCell className="whitespace-nowrap">{equipe.estado}</TableCell>
+                        <TableCell className="whitespace-nowrap">{formatarData(equipe.membro_desde)}</TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <span className="px-2 py-1 bg-white/10 rounded text-xs">
+                            {equipe.graduacao_fta}
+                          </span>
+                        </TableCell>
+                        <TableCell className="max-w-[200px]">
+                          <div className="truncate" title={equipe.historico_transgressoes || '-'}>
+                            {equipe.historico_transgressoes || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {equipe.instagram ? (
+                            <a 
+                              href={equipe.instagram} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-fta-green hover:text-fta-green/80 underline truncate block max-w-[150px]"
+                              title={equipe.instagram}
+                            >
+                              {equipe.instagram.length > 30 ? `${equipe.instagram.substring(0, 30)}...` : equipe.instagram}
+                            </a>
+                          ) : (
+                            <span className="text-white/40">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-white/60">
+                          {equipe.created_at ? formatarData(equipe.created_at) : '-'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-white/60">
+                          {equipe.updated_at ? formatarData(equipe.updated_at) : '-'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            equipe.ativo !== false 
+                              ? 'bg-fta-green/20 text-fta-green' 
+                              : 'bg-red-500/20 text-red-400'
+                          }`}>
+                            {equipe.ativo !== false ? 'Ativa' : 'Desativada'}
+                          </span>
+                        </TableCell>
+                        {isAdmin && (
+                          <TableCell className="whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  abrirSideover(equipe)
+                                }}
+                                className="text-fta-green hover:text-fta-green/80 transition-colors p-2"
+                                title="Ver detalhes e criar link"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleEquipeAtivo(equipe.id!, equipe.ativo !== false)
+                                }}
+                                className={`p-2 transition-colors ${
+                                  equipe.ativo !== false
+                                    ? 'text-yellow-400 hover:text-yellow-300'
+                                    : 'text-fta-green hover:text-fta-green/80'
+                                }`}
+                                title={equipe.ativo !== false ? 'Desativar equipe' : 'Ativar equipe'}
+                              >
+                                {equipe.ativo !== false ? (
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                )}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  excluirEquipe(equipe.id!)
+                                }}
+                                className="text-red-400 hover:text-red-300 transition-colors p-2"
+                                title="Excluir equipe"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
 
