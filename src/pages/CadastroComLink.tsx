@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Input } from '../components/UI/Input'
 import { Button } from '../components/UI/Button'
 import { Equipe } from '../lib/types'
+import { MdSave, MdGroups } from 'react-icons/md'
 
 export const CadastroComLink: React.FC = () => {
   const { tipo, token } = useParams<{ tipo: string; token: string }>()
@@ -246,15 +247,23 @@ export const CadastroComLink: React.FC = () => {
     )
   }
 
-  // Formulário de equipe (similar ao CadastroEquipe, mas sem campo de transgressões)
+  // Formulário de equipe
   return (
     <div className="min-h-screen bg-fta-dark text-white p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">Cadastro de Equipe</h1>
+        <div className="mb-8 flex items-center gap-3">
+          <div className="w-12 h-12 bg-fta-green/20 rounded-lg flex items-center justify-center">
+            <MdGroups className="w-6 h-6 text-fta-green" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold">Cadastro de Equipe</h1>
+            <p className="text-white/60 mt-1">Preencha os dados da equipe abaixo</p>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <section className="bg-fta-gray/50 p-6 rounded-xl border border-white/10">
-            <h2 className="text-2xl font-semibold mb-6 text-fta-green">Dados da Equipe</h2>
+            <h2 className="text-xl font-semibold mb-6 text-fta-green">Informações Básicas</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
@@ -267,6 +276,7 @@ export const CadastroComLink: React.FC = () => {
               <Input
                 label="Total de Membros"
                 type="number"
+                min="0"
                 value={formDataEquipe.total_membros}
                 onChange={(e) => setFormDataEquipe({ ...formDataEquipe, total_membros: parseInt(e.target.value) || 0 })}
                 required
@@ -275,6 +285,7 @@ export const CadastroComLink: React.FC = () => {
               <Input
                 label="Membros Ativos"
                 type="number"
+                min="0"
                 value={formDataEquipe.ativos}
                 onChange={(e) => setFormDataEquipe({ ...formDataEquipe, ativos: parseInt(e.target.value) || 0 })}
                 required
@@ -335,9 +346,14 @@ export const CadastroComLink: React.FC = () => {
             </div>
           </section>
 
-          <div className="flex justify-end gap-4">
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Salvando...' : 'Cadastrar Equipe'}
+          <div className="flex justify-end gap-4 pt-4">
+            <Button 
+              type="submit" 
+              disabled={saving}
+              className="flex items-center gap-2 min-w-[180px] justify-center"
+            >
+              <MdSave className="w-5 h-5" />
+              {saving ? 'Salvando...' : 'Salvar Equipe'}
             </Button>
           </div>
         </form>

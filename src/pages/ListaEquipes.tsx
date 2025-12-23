@@ -324,8 +324,9 @@ export const ListaEquipes: React.FC = () => {
               <p className="text-white/40 text-sm">Use um link de cadastro de equipe para começar.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
+            <div className="bg-fta-gray/50 rounded-xl border border-white/10 overflow-hidden">
+              <Table>
+                <TableHeader>
                 <TableHeaderCell>Nome</TableHeaderCell>
                 <TableHeaderCell>Capitão</TableHeaderCell>
                 <TableHeaderCell>Total Membros</TableHeaderCell>
@@ -419,7 +420,8 @@ export const ListaEquipes: React.FC = () => {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
 
           <div className="mt-4 text-white/60 text-sm">
