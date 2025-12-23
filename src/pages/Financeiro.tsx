@@ -5,7 +5,6 @@ import { Table, TableHeader, TableHeaderCell, TableBody, TableRow, TableCell } f
 import { Button } from '../components/UI/Button'
 import { Input } from '../components/UI/Input'
 import { 
-  MdPayment, 
   MdCheckCircle, 
   MdPending, 
   MdAttachMoney, 
@@ -129,7 +128,6 @@ export const Financeiro: React.FC = () => {
 
   const atualizarPlanoEquipe = async (equipeId: string, planoId: string | null) => {
     try {
-      const equipe = equipes.find(e => e.id === equipeId)
       const plano = planos.find(p => p.id === planoId)
       
       const dadosAtualizacao: any = {
