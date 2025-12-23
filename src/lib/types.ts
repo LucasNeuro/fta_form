@@ -83,5 +83,11 @@ export interface Anotacao {
   data_evento?: string
   nome_evento?: string
   local_evento?: string
+  // Informações do operador (quando a anotação é copiada de operador para equipe)
+  operador_info?: {
+    nome: string
+    codinome: string
+    display: string
+  }
 }
 
