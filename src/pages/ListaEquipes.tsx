@@ -364,6 +364,21 @@ export const ListaEquipes: React.FC = () => {
                   <span className="text-white/60">Membro Desde:</span>
                   <p className="text-white font-medium">{formatarData(equipeSelecionada.membro_desde)}</p>
                 </div>
+                {equipeSelecionada.instagram && (
+                  <div className="col-span-2">
+                    <span className="text-white/60">Instagram:</span>
+                    <p className="text-white font-medium">
+                      <a 
+                        href={equipeSelecionada.instagram} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-fta-green hover:text-fta-green/80 underline break-all"
+                      >
+                        {equipeSelecionada.instagram}
+                      </a>
+                    </p>
+                  </div>
+                )}
                 <div>
                   <span className="text-white/60">Status:</span>
                   <p className={`font-medium ${

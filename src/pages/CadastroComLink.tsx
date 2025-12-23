@@ -31,7 +31,8 @@ export const CadastroComLink: React.FC = () => {
     cidade: '',
     estado: '',
     membro_desde: '',
-    graduacao_fta: 'Cadete' as const
+    graduacao_fta: 'Cadete' as const,
+    instagram: ''
   })
 
   useEffect(() => {
@@ -303,6 +304,14 @@ export const CadastroComLink: React.FC = () => {
                   <option value="Conselheiro" className="bg-fta-gray">Conselheiro</option>
                 </select>
               </div>
+
+              <Input
+                label="Link do Instagram"
+                type="url"
+                value={formDataEquipe.instagram}
+                onChange={(e) => setFormDataEquipe({ ...formDataEquipe, instagram: e.target.value })}
+                placeholder="https://instagram.com/equipe_nome"
+              />
             </div>
           </section>
 

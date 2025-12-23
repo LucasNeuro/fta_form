@@ -23,6 +23,7 @@ export interface Equipe {
   membro_desde: string
   historico_transgressoes?: string
   graduacao_fta: 'Cadete' | 'Efetivo' | 'Graduado' | 'Estado Maior' | 'Conselheiro'
+  instagram?: string // Link do Instagram da equipe
   ativo?: boolean
   created_at?: string
   updated_at?: string
