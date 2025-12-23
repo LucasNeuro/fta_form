@@ -4,18 +4,52 @@ import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/UI/Button'
 import { Input } from '../components/UI/Input'
 import { Table, TableHeader, TableHeaderCell, TableBody, TableRow, TableCell } from '../components/UI/Table'
-import { MdContentCopy, MdDelete, MdCheckCircle, MdCancel, MdLink } from 'react-icons/md'
+import { MdContentCopy, MdDelete, MdCheckCircle, MdCancel, MdLink, MdSearch, MdFilterList } from 'react-icons/md'
 
 export const AdminPanel: React.FC = () => {
   const { user } = useAuth()
   const [links, setLinks] = useState<any[]>([])
+  const [linksFiltrados, setLinksFiltrados] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [linkCriado, setLinkCriado] = useState<string>('')
   const [nomeLink, setNomeLink] = useState<string>('')
+  const [filtroNome, setFiltroNome] = useState<string>('')
+  const [filtroStatus, setFiltroStatus] = useState<string>('todos') // 'todos', 'ativo', 'desativado', 'usado'
 
   useEffect(() => {
     carregarLinks()
   }, [])
+
+  useEffect(() => {
+    aplicarFiltros(links, filtroNome, filtroStatus)
+  }, [filtroNome, filtroStatus, links])
+
+  const aplicarFiltros = (linksParaFiltrar: any[], nome: string, status: string) => {
+    let filtrados = [...linksParaFiltrar]
+
+    // Filtro por nome
+    if (nome.trim()) {
+      filtrados = filtrados.filter(link => 
+        link.nome?.toLowerCase().includes(nome.toLowerCase().trim())
+      )
+    }
+
+    // Filtro por status
+    if (status !== 'todos') {
+      filtrados = filtrados.filter(link => {
+        if (status === 'usado') {
+          return link.usado === true
+        } else if (status === 'ativo') {
+          return link.ativo !== false && !link.usado
+        } else if (status === 'desativado') {
+          return link.ativo === false
+        }
+        return true
+      })
+    }
+
+    setLinksFiltrados(filtrados)
+  }
 
   const carregarLinks = async () => {
     try {
@@ -28,6 +62,7 @@ export const AdminPanel: React.FC = () => {
 
       if (linksRes.data) {
         setLinks(linksRes.data)
+        setLinksFiltrados(linksRes.data)
       }
     } catch (error: any) {
       console.error('Erro ao carregar links:', error.message)
@@ -35,6 +70,37 @@ export const AdminPanel: React.FC = () => {
       setLoading(false)
     }
   }
+
+  const aplicarFiltros = (linksParaFiltrar: any[], nome: string, status: string) => {
+    let filtrados = [...linksParaFiltrar]
+
+    // Filtro por nome
+    if (nome.trim()) {
+      filtrados = filtrados.filter(link => 
+        link.nome?.toLowerCase().includes(nome.toLowerCase().trim())
+      )
+    }
+
+    // Filtro por status
+    if (status !== 'todos') {
+      filtrados = filtrados.filter(link => {
+        if (status === 'usado') {
+          return link.usado === true
+        } else if (status === 'ativo') {
+          return link.ativo !== false && !link.usado
+        } else if (status === 'desativado') {
+          return link.ativo === false
+        }
+        return true
+      })
+    }
+
+    setLinksFiltrados(filtrados)
+  }
+
+  useEffect(() => {
+    aplicarFiltros(links, filtroNome, filtroStatus)
+  }, [filtroNome, filtroStatus])
 
   const criarLinkEquipe = async () => {
     try {
@@ -97,7 +163,7 @@ export const AdminPanel: React.FC = () => {
       }
       
       await carregarLinks()
-      alert(`Link ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`)
+      // Não mostrar alert para não interromper o fluxo
     } catch (error: any) {
       console.error('Erro ao atualizar link:', error)
       alert('Erro ao atualizar link: ' + (error.message || 'Erro desconhecido'))
@@ -120,8 +186,8 @@ export const AdminPanel: React.FC = () => {
         throw error
       }
       
-      alert('Link excluído com sucesso!')
       await carregarLinks()
+      alert('Link excluído com sucesso!')
     } catch (error: any) {
       console.error('Erro ao excluir link:', error)
       alert('Erro ao excluir link: ' + (error.message || 'Erro desconhecido'))
@@ -198,21 +264,104 @@ export const AdminPanel: React.FC = () => {
 
         {/* Lista de Links */}
         <div className="bg-fta-gray/50 p-6 rounded-xl border border-white/10">
-          <h2 className="text-2xl font-semibold mb-4 text-fta-green">Links de Equipes Criados</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold text-fta-green">Links de Equipes Criados</h2>
+            {links.length > 0 && (
+              <span className="text-white/60 text-sm">
+                Total: {links.length} | Mostrando: {linksFiltrados.length}
+              </span>
+            )}
+          </div>
+
+          {/* Filtros */}
+          {links.length > 0 && (
+            <div className="bg-fta-dark p-4 rounded-lg border border-white/10 mb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <MdFilterList className="w-5 h-5 text-fta-green" />
+                <span className="text-white/80 font-medium">Filtros</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Filtro por Nome */}
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    Buscar por Nome
+                  </label>
+                  <div className="relative">
+                    <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-5 h-5" />
+                    <input
+                      type="text"
+                      value={filtroNome}
+                      onChange={(e) => setFiltroNome(e.target.value)}
+                      placeholder="Digite o nome do link..."
+                      className="w-full pl-10 pr-4 py-2 bg-fta-gray border border-white/20 rounded-lg text-white placeholder:text-white/50 focus:outline-none focus:border-fta-green"
+                    />
+                  </div>
+                </div>
+
+                {/* Filtro por Status */}
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    Filtrar por Status
+                  </label>
+                  <select
+                    value={filtroStatus}
+                    onChange={(e) => setFiltroStatus(e.target.value)}
+                    className="w-full px-4 py-2 bg-fta-gray border border-white/20 rounded-lg text-white focus:outline-none focus:border-fta-green"
+                  >
+                    <option value="todos">Todos</option>
+                    <option value="ativo">Ativos</option>
+                    <option value="desativado">Desativados</option>
+                    <option value="usado">Usados</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Botão Limpar Filtros */}
+              {(filtroNome.trim() || filtroStatus !== 'todos') && (
+                <div className="mt-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setFiltroNome('')
+                      setFiltroStatus('todos')
+                    }}
+                    className="text-sm"
+                  >
+                    Limpar Filtros
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
           
           {links.length === 0 ? (
             <p className="text-white/60">Nenhum link criado ainda.</p>
+          ) : linksFiltrados.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-white/60 mb-2">Nenhum link encontrado com os filtros aplicados.</p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setFiltroNome('')
+                  setFiltroStatus('todos')
+                }}
+                className="mt-2"
+              >
+                Limpar Filtros
+              </Button>
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableHeaderCell>Nome</TableHeaderCell>
-                <TableHeaderCell>Link</TableHeaderCell>
-                <TableHeaderCell>Status</TableHeaderCell>
-                <TableHeaderCell>Criado em</TableHeaderCell>
-                <TableHeaderCell>Ações</TableHeaderCell>
-              </TableHeader>
-              <TableBody>
-                {links.map((link) => (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableHeaderCell>Nome</TableHeaderCell>
+                  <TableHeaderCell>Link</TableHeaderCell>
+                  <TableHeaderCell>Status</TableHeaderCell>
+                  <TableHeaderCell>Criado em</TableHeaderCell>
+                  <TableHeaderCell>Ações</TableHeaderCell>
+                </TableHeader>
+                <TableBody>
+                  {linksFiltrados.map((link) => (
                   <TableRow key={link.id}>
                     <TableCell>
                       <span className="font-medium text-white">
@@ -280,9 +429,10 @@ export const AdminPanel: React.FC = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
 
