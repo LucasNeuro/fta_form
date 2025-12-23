@@ -162,7 +162,7 @@ export const CadastroComLink: React.FC = () => {
 
           <div className="bg-blue-500/20 border border-blue-500/50 p-4 rounded-lg mb-6">
             <p className="text-blue-400 text-sm">
-              💡 <strong>Este link permite cadastrar vários operadores.</strong> Após cadastrar um operador, o formulário será limpo e você poderá cadastrar outro operador usando o mesmo link.
+              💡 <strong>Este link permite cadastrar vários operadores simultaneamente.</strong> Vários operadores podem usar o mesmo link ao mesmo tempo. Após cadastrar um operador, o formulário será limpo automaticamente para você cadastrar outro operador.
             </p>
           </div>
 

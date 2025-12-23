@@ -446,24 +446,30 @@ export const ListaEquipes: React.FC = () => {
                               {link.nome || <span className="text-white/40 italic">Sem nome</span>}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className={`text-xs px-2 py-1 rounded ${
-                              link.usado
-                                ? 'bg-yellow-500/20 text-yellow-400'
-                                : link.ativo !== false
+                              link.ativo !== false
                                 ? 'bg-fta-green/20 text-fta-green'
                                 : 'bg-red-500/20 text-red-400'
                             }`}>
-                              {link.usado ? 'Usado' : link.ativo !== false ? 'Ativo' : 'Desativado'}
+                              {link.ativo !== false ? 'Ativo' : 'Desativado'}
                             </span>
+                            {link.ativo !== false && (
+                              <span className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400">
+                                🔗 Permite múltiplos cadastros
+                              </span>
+                            )}
                             {link.created_at && (
                               <span className="text-white/40 text-xs">
                                 {formatarData(link.created_at)}
                               </span>
                             )}
                           </div>
-                          <p className="text-fta-green text-xs break-all font-mono">
+                          <p className="text-fta-green text-xs break-all font-mono mb-1">
                             {formatarLink(link.token)}
+                          </p>
+                          <p className="text-white/60 text-xs">
+                            💡 Vários operadores podem usar este link simultaneamente
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
