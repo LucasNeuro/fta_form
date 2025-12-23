@@ -20,31 +20,12 @@ CREATE TABLE IF NOT EXISTS public.tipos_transgressoes (
 CREATE INDEX IF NOT EXISTS idx_tipos_transgressoes_ativo ON public.tipos_transgressoes(ativo);
 CREATE INDEX IF NOT EXISTS idx_tipos_transgressoes_criado_por ON public.tipos_transgressoes(criado_por);
 
--- 3. Habilitar RLS
-ALTER TABLE public.tipos_transgressoes ENABLE ROW LEVEL SECURITY;
+-- 3. RLS - Desabilitar RLS para esta tabela já que usamos autenticação customizada
+-- A validação de admin é feita no frontend
+ALTER TABLE public.tipos_transgressoes DISABLE ROW LEVEL SECURITY;
 
--- 4. Criar políticas RLS
--- Policy: Admins podem ver todos os tipos
--- NOTA: Como estamos usando autenticação customizada, vamos usar uma abordagem diferente
--- Permitir acesso direto via service_role ou verificar pelo usuário logado no localStorage
-DROP POLICY IF EXISTS "Admins can view all transgression types" ON public.tipos_transgressoes;
-CREATE POLICY "Admins can view all transgression types" ON public.tipos_transgressoes
-  FOR SELECT USING (true); -- Permitir leitura para todos autenticados (será validado no frontend)
-
--- Policy: Admins podem inserir novos tipos
-DROP POLICY IF EXISTS "Admins can insert transgression types" ON public.tipos_transgressoes;
-CREATE POLICY "Admins can insert transgression types" ON public.tipos_transgressoes
-  FOR INSERT WITH CHECK (true); -- Permitir inserção (validação no frontend)
-
--- Policy: Admins podem atualizar tipos
-DROP POLICY IF EXISTS "Admins can update transgression types" ON public.tipos_transgressoes;
-CREATE POLICY "Admins can update transgression types" ON public.tipos_transgressoes
-  FOR UPDATE USING (true) WITH CHECK (true); -- Permitir atualização (validação no frontend)
-
--- Policy: Admins podem deletar tipos
-DROP POLICY IF EXISTS "Admins can delete transgression types" ON public.tipos_transgressoes;
-CREATE POLICY "Admins can delete transgression types" ON public.tipos_transgressoes
-  FOR DELETE USING (true); -- Permitir deleção (validação no frontend)
+-- 4. RLS desabilitado - Não precisamos de políticas já que RLS está desabilitado
+-- A validação de admin é feita no frontend (página protegida com ProtectedRoute requireAdmin)
 
 -- 5. Criar trigger para updated_at
 DROP TRIGGER IF EXISTS update_tipos_transgressoes_updated_at ON public.tipos_transgressoes;
