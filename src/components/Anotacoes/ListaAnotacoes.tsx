@@ -59,14 +59,7 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
       setLoading(true)
       let query = supabase
         .from('anotacoes')
-        .select(`
-          *,
-          tipo_transgressao:tipo_transgressao_id (
-            id,
-            nome,
-            descricao
-          )
-        `)
+        .select('*')
         .eq('tipo', tipo)
         .order('created_at', { ascending: false })
 
@@ -94,11 +87,26 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
         // Criar mapa de usuários
         const usersMap = new Map(usersData?.map(u => [u.id, u.email]) || [])
         
-        // Mapear anotações com email do criador
+        // Buscar tipos de transgressões se houver
+        const tipoTransgressaoIds = [...new Set(data.filter((anot: any) => anot.tipo_transgressao_id).map((anot: any) => anot.tipo_transgressao_id))]
+        let tiposMap = new Map()
+        
+        if (tipoTransgressaoIds.length > 0) {
+          const { data: tiposData } = await supabase
+            .from('tipos_transgressoes')
+            .select('id, nome, descricao')
+            .in('id', tipoTransgressaoIds)
+          
+          if (tiposData) {
+            tiposMap = new Map(tiposData.map(t => [t.id, t]))
+          }
+        }
+        
+        // Mapear anotações com email do criador e tipo de transgressão
         const anotacoesComCriador = data.map((anot: any) => ({
           ...anot,
           criado_por_nome: usersMap.get(anot.criado_por) || 'Desconhecido',
-          tipo_transgressao: anot.tipo_transgressao || null
+          tipo_transgressao: anot.tipo_transgressao_id ? tiposMap.get(anot.tipo_transgressao_id) || null : null
         }))
         
         setAnotacoes(anotacoesComCriador)
