@@ -214,18 +214,42 @@ export const ListaAnotacoes: React.FC<ListaAnotacoesProps> = ({
 
       // Se for anotação de operador e tiver equipe_id, criar também na equipe
       if (tipo === 'operador' && operadorEquipeId && eTransgressao) {
+        // Buscar dados do operador para incluir na descrição
+        let nomeOperador = operadorId
+        let codinomeOperador = ''
+        
+        try {
+          const { data: operadorData } = await supabase
+            .from('operadores')
+            .select('nome, codinome')
+            .eq('id', operadorId)
+            .single()
+          
+          if (operadorData) {
+            nomeOperador = operadorData.nome
+            codinomeOperador = operadorData.codinome
+          }
+        } catch (error) {
+          console.error('Erro ao buscar dados do operador:', error)
+          // Continuar mesmo se não conseguir buscar
+        }
+        
         const tipoTransgressaoNome = tipoTransgressaoId === 'outros' 
           ? outrosTitulo.trim() 
           : tiposTransgressoes.find(t => t.id === tipoTransgressaoId)?.nome || 'Transgressão'
         
+        const operadorInfo = codinomeOperador 
+          ? `${nomeOperador} (${codinomeOperador})`
+          : nomeOperador
+        
         const anotacaoEquipeData: any = {
           tipo: 'equipe' as const,
           equipe_id: operadorEquipeId,
-          operador_id: null,
+          operador_id: operadorId, // Manter referência ao operador
           e_transgressao: true,
           tipo_transgressao_id: tipoTransgressaoId === 'outros' ? null : tipoTransgressaoId,
           titulo: `[Operador] ${tipoTransgressaoNome}`,
-          descricao: `Operador: ${operadorId}\nData: ${dataEvento}\nEvento: ${nomeEvento.trim()}\nLocal: ${localEvento.trim()}${descricao.trim() ? `\nObservação: ${descricao.trim()}` : ''}`,
+          descricao: `Operador: ${operadorInfo}\nData: ${dataEvento}\nEvento: ${nomeEvento.trim()}\nLocal: ${localEvento.trim()}${descricao.trim() ? `\nObservação: ${descricao.trim()}` : ''}`,
           criado_por: user.id,
           data_evento: dataEvento,
           nome_evento: nomeEvento.trim(),
