@@ -20,10 +20,6 @@ export const AdminPanel: React.FC = () => {
     carregarLinks()
   }, [])
 
-  useEffect(() => {
-    aplicarFiltros(links, filtroNome, filtroStatus)
-  }, [filtroNome, filtroStatus, links])
-
   const aplicarFiltros = (linksParaFiltrar: any[], nome: string, status: string) => {
     let filtrados = [...linksParaFiltrar]
 
@@ -50,6 +46,10 @@ export const AdminPanel: React.FC = () => {
 
     setLinksFiltrados(filtrados)
   }
+
+  useEffect(() => {
+    aplicarFiltros(links, filtroNome, filtroStatus)
+  }, [filtroNome, filtroStatus, links])
 
   const carregarLinks = async () => {
     try {
