@@ -25,26 +25,42 @@ export const TiposTransgressoes: React.FC = () => {
   const carregarTipos = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      
+      // Primeiro, vamos tentar sem filtro para ver todos os tipos
+      let query = supabase
         .from('tipos_transgressoes')
         .select('*')
         .order('nome')
 
+      const { data, error } = await query
+
       if (error) {
-        console.error('Erro detalhado:', error)
+        console.error('Erro detalhado ao carregar tipos:', error)
+        console.error('Código do erro:', error.code)
+        console.error('Mensagem:', error.message)
+        console.error('Detalhes:', error.details)
+        
+        // Se for erro de RLS, tentar desabilitar temporariamente ou usar service_role
+        if (error.code === '42501' || error.message.includes('permission denied') || error.message.includes('RLS')) {
+          console.warn('Erro de permissão RLS. Verifique as políticas no banco de dados.')
+          alert('Erro de permissão. Verifique se as políticas RLS estão configuradas corretamente no Supabase.')
+        }
+        
         throw error
       }
       
+      console.log('Dados recebidos:', data)
       setTipos(data || [])
       
       if (data && data.length > 0) {
-        console.log(`${data.length} tipos de transgressões carregados`)
+        console.log(`${data.length} tipos de transgressões carregados com sucesso`)
       } else {
-        console.log('Nenhum tipo de transgressão encontrado no banco')
+        console.log('Nenhum tipo de transgressão encontrado no banco de dados')
+        console.log('Verifique se o script SQL foi executado corretamente')
       }
     } catch (error: any) {
-      console.error('Erro ao carregar tipos:', error.message)
-      alert('Erro ao carregar tipos de transgressões: ' + error.message)
+      console.error('Erro ao carregar tipos:', error)
+      alert('Erro ao carregar tipos de transgressões: ' + (error.message || 'Erro desconhecido'))
       setTipos([])
     } finally {
       setLoading(false)
