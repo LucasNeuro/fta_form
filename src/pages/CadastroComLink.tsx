@@ -47,12 +47,11 @@ export const CadastroComLink: React.FC = () => {
         .select('*')
         .eq('token', token)
         .eq('tipo', tipo)
-        .eq('usado', false)
         .eq('ativo', true)
         .single()
 
       if (error || !data) {
-        alert('Link inválido, já utilizado ou desativado!')
+        alert('Link inválido ou desativado!')
         navigate('/')
         return
       }
@@ -92,28 +91,32 @@ export const CadastroComLink: React.FC = () => {
 
         if (error) throw error
 
-        // Marcar link como usado
-        const { error: linkError } = await supabase
-          .from('cadastro_links')
-          .update({ 
-            usado: true, 
-            usado_em: new Date().toISOString() 
-          })
-          .eq('id', link.id)
-
-        if (linkError) throw linkError
+        // Não marcar link como usado - permite múltiplos cadastros
+        // O link continua ativo e pode ser usado várias vezes até ser desativado manualmente
 
         alert('Operador cadastrado com sucesso!')
-        navigate('/')
+        // Não redireciona automaticamente - permite cadastrar outro operador
+        // Limpa o formulário para novo cadastro
+        setFormDataOperador({
+          nome: '',
+          codinome: '',
+          cidade: '',
+          estado: '',
+          nascimento: '',
+          email: '',
+          telefone: '',
+          equipe_id: link.equipe_id || '',
+          lab_fta: 0
+        })
       } else if (tipo === 'equipe') {
-        // Cadastrar equipe
+        // Para equipes, manter como único cadastro (equipe só pode ser cadastrada uma vez)
         const { error } = await supabase
           .from('equipes')
           .insert([formDataEquipe])
 
         if (error) throw error
 
-        // Marcar link como usado
+        // Marcar link como usado (equipe só pode ser cadastrada uma vez)
         const { error: linkError } = await supabase
           .from('cadastro_links')
           .update({ 
@@ -156,6 +159,12 @@ export const CadastroComLink: React.FC = () => {
               </p>
             </div>
           )}
+
+          <div className="bg-blue-500/20 border border-blue-500/50 p-4 rounded-lg mb-6">
+            <p className="text-blue-400 text-sm">
+              💡 <strong>Este link permite cadastrar vários operadores.</strong> Após cadastrar um operador, o formulário será limpo e você poderá cadastrar outro operador usando o mesmo link.
+            </p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
             <section className="bg-fta-gray/50 p-6 rounded-xl border border-white/10">
