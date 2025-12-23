@@ -13,6 +13,16 @@ export interface Operador {
   updated_at?: string
 }
 
+export interface Plano {
+  id?: string
+  nome: string
+  descricao?: string
+  valor: number
+  ativo: boolean
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Equipe {
   id?: string
   nome: string
@@ -32,6 +42,8 @@ export interface Equipe {
   pagamento_efetuado?: boolean
   data_pagamento?: string
   valor_cobrado?: number
+  plano_id?: string
+  plano?: Plano // Para join
 }
 
 export type UserRole = 'admin' | 'responsavel_equipe' | 'user'
