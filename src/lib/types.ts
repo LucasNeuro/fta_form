@@ -8,6 +8,7 @@ export interface Operador {
   email: string
   telefone: string
   equipe_id?: string
+  lab_fta?: number // Quantidade de laboratórios FTA realizados
   created_at?: string
   updated_at?: string
 }

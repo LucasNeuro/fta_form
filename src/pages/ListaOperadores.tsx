@@ -101,6 +101,7 @@ export const ListaOperadores: React.FC = () => {
               <TableHeaderCell>Telefone</TableHeaderCell>
               <TableHeaderCell>Cidade / Estado</TableHeaderCell>
               <TableHeaderCell>Idade</TableHeaderCell>
+              <TableHeaderCell>LAB FTA</TableHeaderCell>
               <TableHeaderCell>Equipe</TableHeaderCell>
             </TableHeader>
             <TableBody>
@@ -116,6 +117,11 @@ export const ListaOperadores: React.FC = () => {
                   <TableCell>{operador.telefone}</TableCell>
                   <TableCell>{operador.cidade} / {operador.estado}</TableCell>
                   <TableCell>{calcularIdade(operador.nascimento)} anos</TableCell>
+                  <TableCell>
+                    <span className="px-2 py-1 bg-fta-green/20 text-fta-green rounded text-xs font-medium">
+                      {operador.lab_fta || 0}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     {operador.equipe ? (
                       <span className="px-2 py-1 bg-white/10 rounded text-xs">

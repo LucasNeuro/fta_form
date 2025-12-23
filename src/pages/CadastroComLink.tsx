@@ -20,7 +20,8 @@ export const CadastroComLink: React.FC = () => {
     nascimento: '',
     email: '',
     telefone: '',
-    equipe_id: ''
+    equipe_id: '',
+    lab_fta: 0
   })
 
   const [formDataEquipe, setFormDataEquipe] = useState({
@@ -210,6 +211,16 @@ export const CadastroComLink: React.FC = () => {
                   placeholder="(00) 00000-0000"
                   value={formDataOperador.telefone}
                   onChange={(e) => setFormDataOperador({ ...formDataOperador, telefone: e.target.value })}
+                  required
+                />
+
+                <Input
+                  label="LAB FTA (numérico)"
+                  type="number"
+                  min="0"
+                  placeholder="Quantidade de laboratórios FTA realizados"
+                  value={formDataOperador.lab_fta || ''}
+                  onChange={(e) => setFormDataOperador({ ...formDataOperador, lab_fta: parseInt(e.target.value) || 0 })}
                   required
                 />
               </div>
