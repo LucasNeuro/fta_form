@@ -67,96 +67,161 @@ export const RelatorioEquipes: React.FC = () => {
   }
 
   const gerarPDF = () => {
-    const doc = new jsPDF()
+    const doc = new jsPDF('landscape', 'mm', 'a4') // Modo paisagem para mais espaço
     const pageWidth = doc.internal.pageSize.getWidth()
-    const margin = 20
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 15
     let yPos = margin
 
+    // Cores
+    const corVerde = [34, 197, 94] // Verde FTA
+    const corCinza = [240, 240, 240] // Cinza claro para linhas alternadas
+    const corTextoEscuro = [0, 0, 0] // Preto para texto
+    const corTextoClaro = [255, 255, 255] // Branco para texto no cabeçalho
+
     // Título
-    doc.setFontSize(20)
-    doc.setTextColor(34, 197, 94) // Verde FTA
+    doc.setFontSize(22)
+    doc.setTextColor(corVerde[0], corVerde[1], corVerde[2])
+    doc.setFont('helvetica', 'bold')
     doc.text('Relatório de Equipes', margin, yPos)
-    yPos += 10
+    yPos += 8
 
     // Filtros aplicados
-    doc.setFontSize(12)
-    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(10)
+    doc.setTextColor(corTextoEscuro[0], corTextoEscuro[1], corTextoEscuro[2])
+    doc.setFont('helvetica', 'normal')
     if (filtroEstado || filtroGraduacao) {
       doc.text('Filtros aplicados:', margin, yPos)
-      yPos += 6
+      yPos += 5
       if (filtroEstado) {
         doc.text(`Estado: ${filtroEstado}`, margin + 5, yPos)
-        yPos += 6
+        yPos += 5
       }
       if (filtroGraduacao) {
         doc.text(`Graduação FTA: ${filtroGraduacao}`, margin + 5, yPos)
-        yPos += 6
+        yPos += 5
       }
       yPos += 3
     }
 
     // Data do relatório
-    doc.setFontSize(10)
-    doc.setTextColor(200, 200, 200)
-    doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, margin, yPos)
-    yPos += 10
+    doc.setFontSize(9)
+    doc.setTextColor(120, 120, 120)
+    const dataFormatada = new Date().toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+    doc.text(`Gerado em: ${dataFormatada}`, margin, yPos)
+    yPos += 8
 
     // Cabeçalho da tabela
-    doc.setFontSize(11)
-    doc.setTextColor(255, 255, 255)
-    doc.setFillColor(34, 197, 94)
-    doc.rect(margin, yPos, pageWidth - 2 * margin, 8, 'F')
+    const linhaAltura = 8
+    const colunas = [
+      { label: 'Nome', width: 50 },
+      { label: 'Capitão', width: 45 },
+      { label: 'Cidade', width: 35 },
+      { label: 'Estado', width: 20 },
+      { label: 'Graduação FTA', width: 40 },
+      { label: 'Total Membros', width: 35 },
+      { label: 'Ativos', width: 25 },
+      { label: 'Membro Desde', width: 30 }
+    ]
+
+    // Fundo verde do cabeçalho
+    doc.setFillColor(corVerde[0], corVerde[1], corVerde[2])
+    doc.rect(margin, yPos, pageWidth - 2 * margin, linhaAltura, 'F')
     
-    doc.setTextColor(0, 0, 0)
+    // Texto do cabeçalho em branco
+    doc.setTextColor(corTextoClaro[0], corTextoClaro[1], corTextoClaro[2])
     doc.setFont('helvetica', 'bold')
-    let xPos = margin + 5
-    doc.text('Nome', xPos, yPos + 5)
-    xPos += 45
-    doc.text('Capitão', xPos, yPos + 5)
-    xPos += 35
-    doc.text('Estado', xPos, yPos + 5)
-    xPos += 25
-    doc.text('Graduação', xPos, yPos + 5)
-    xPos += 30
-    doc.text('Membros', xPos, yPos + 5)
+    doc.setFontSize(10)
     
-    yPos += 10
+    let xPos = margin + 3
+    colunas.forEach((col) => {
+      doc.text(col.label, xPos, yPos + 5)
+      xPos += col.width
+    })
+    
+    yPos += linhaAltura + 2
 
     // Dados das equipes
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(10)
+    doc.setFontSize(9)
+    const alturaLinha = 7
+
     equipesFiltradas.forEach((equipe, index) => {
       // Verifica se precisa de nova página
-      if (yPos > doc.internal.pageSize.getHeight() - 30) {
+      if (yPos + alturaLinha > pageHeight - margin) {
         doc.addPage()
         yPos = margin
+
+        // Redesenhar cabeçalho
+        doc.setFillColor(corVerde[0], corVerde[1], corVerde[2])
+        doc.rect(margin, yPos, pageWidth - 2 * margin, linhaAltura, 'F')
+        doc.setTextColor(corTextoClaro[0], corTextoClaro[1], corTextoClaro[2])
+        doc.setFont('helvetica', 'bold')
+        xPos = margin + 3
+        colunas.forEach((col) => {
+          doc.text(col.label, xPos, yPos + 5)
+          xPos += col.width
+        })
+        yPos += linhaAltura + 2
       }
 
-      // Alterna cor de fundo
+      // Fundo alternado para linhas
       if (index % 2 === 0) {
-        doc.setFillColor(50, 50, 50)
-        doc.rect(margin, yPos, pageWidth - 2 * margin, 7, 'F')
+        doc.setFillColor(corCinza[0], corCinza[1], corCinza[2])
+        doc.rect(margin, yPos - 1, pageWidth - 2 * margin, alturaLinha, 'F')
       }
 
-      doc.setTextColor(255, 255, 255)
-      xPos = margin + 5
-      doc.text(equipe.nome.substring(0, 25), xPos, yPos + 5)
-      xPos += 45
-      doc.text(equipe.capitao.substring(0, 20), xPos, yPos + 5)
-      xPos += 35
-      doc.text(equipe.estado, xPos, yPos + 5)
-      xPos += 25
-      doc.text(equipe.graduacao_fta, xPos, yPos + 5)
-      xPos += 30
-      doc.text(`${equipe.total_membros} (${equipe.ativos} ativos)`, xPos, yPos + 5)
+      // Texto preto para legibilidade
+      doc.setTextColor(corTextoEscuro[0], corTextoEscuro[1], corTextoEscuro[2])
       
-      yPos += 7
+      xPos = margin + 3
+      
+      // Nome (truncar se muito longo)
+      doc.text((equipe.nome || '-').substring(0, 30), xPos, yPos + 4)
+      xPos += colunas[0].width
+
+      // Capitão
+      doc.text((equipe.capitao || '-').substring(0, 25), xPos, yPos + 4)
+      xPos += colunas[1].width
+
+      // Cidade
+      doc.text((equipe.cidade || '-').substring(0, 20), xPos, yPos + 4)
+      xPos += colunas[2].width
+
+      // Estado
+      doc.text(equipe.estado || '-', xPos, yPos + 4)
+      xPos += colunas[3].width
+
+      // Graduação FTA
+      doc.text(equipe.graduacao_fta || '-', xPos, yPos + 4)
+      xPos += colunas[4].width
+
+      // Total Membros
+      doc.text(String(equipe.total_membros || 0), xPos, yPos + 4)
+      xPos += colunas[5].width
+
+      // Ativos
+      doc.text(String(equipe.ativos || 0), xPos, yPos + 4)
+      xPos += colunas[6].width
+
+      // Membro Desde
+      doc.text(formatarData(equipe.membro_desde || ''), xPos, yPos + 4)
+      
+      yPos += alturaLinha
     })
 
     // Rodapé com total
     yPos += 5
     doc.setFont('helvetica', 'bold')
-    doc.setTextColor(34, 197, 94)
+    doc.setFontSize(12)
+    doc.setTextColor(corVerde[0], corVerde[1], corVerde[2])
     doc.text(`Total: ${equipesFiltradas.length} equipe(s)`, margin, yPos)
 
     // Salvar PDF
