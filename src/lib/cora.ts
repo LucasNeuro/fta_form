@@ -16,7 +16,21 @@ export const coraService = {
    */
   async getAccessToken(): Promise<CoraTokenResponse> {
     // Normalizar URL (remover barra final se existir)
-    const backendUrl = (import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')
+    const backendUrlRaw = import.meta.env.VITE_CORA_BACKEND_URL
+    const backendUrl = backendUrlRaw 
+      ? backendUrlRaw.replace(/\/+$/, '')
+      : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3001'
+        : null
+    
+    if (!backendUrl) {
+      throw new Error(
+        'URL do backend Cora não configurada. ' +
+        'Configure a variável de ambiente VITE_CORA_BACKEND_URL no Render. ' +
+        'Exemplo: https://backend-cora.onrender.com'
+      )
+    }
+    
     const clientId = import.meta.env.VITE_CORA_CLIENT_ID || 'int-1ZVwf7iYC106q3iRWEmyJP'
     const env = import.meta.env.VITE_CORA_ENV || 'stage'
 
@@ -55,7 +69,17 @@ export const coraService = {
 
     // Gerar Idempotency-Key único
     const idempotencyKey = crypto.randomUUID()
-    const backendUrl = (import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')
+    const backendUrlRaw = import.meta.env.VITE_CORA_BACKEND_URL
+    const backendUrl = backendUrlRaw 
+      ? backendUrlRaw.replace(/\/+$/, '')
+      : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3001'
+        : null
+    
+    if (!backendUrl) {
+      throw new Error('URL do backend Cora não configurada. Configure VITE_CORA_BACKEND_URL no Render.')
+    }
+    
     const env = import.meta.env.VITE_CORA_ENV || 'stage'
 
     const response = await fetch(`${backendUrl}/api/cora/invoices`, {
@@ -92,7 +116,17 @@ export const coraService = {
       throw new Error('Token de acesso não retornado')
     }
 
-    const backendUrl = (import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')
+    const backendUrlRaw = import.meta.env.VITE_CORA_BACKEND_URL
+    const backendUrl = backendUrlRaw 
+      ? backendUrlRaw.replace(/\/+$/, '')
+      : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3001'
+        : null
+    
+    if (!backendUrl) {
+      throw new Error('URL do backend Cora não configurada. Configure VITE_CORA_BACKEND_URL no Render.')
+    }
+    
     const env = import.meta.env.VITE_CORA_ENV || 'production'
 
     const response = await fetch(`${backendUrl}/api/cora/invoices/${invoiceId}`, {
@@ -134,7 +168,17 @@ export const coraService = {
 
     // Gerar Idempotency-Key único
     const idempotencyKey = crypto.randomUUID()
-    const backendUrl = (import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')
+    const backendUrlRaw = import.meta.env.VITE_CORA_BACKEND_URL
+    const backendUrl = backendUrlRaw 
+      ? backendUrlRaw.replace(/\/+$/, '')
+      : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3001'
+        : null
+    
+    if (!backendUrl) {
+      throw new Error('URL do backend Cora não configurada. Configure VITE_CORA_BACKEND_URL no Render.')
+    }
+    
     const env = import.meta.env.VITE_CORA_ENV || 'production'
 
     // Garantir que payment_forms seja ['PIX']
@@ -177,7 +221,17 @@ export const coraService = {
       throw new Error('Token de acesso não retornado')
     }
 
-    const backendUrl = (import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')
+    const backendUrlRaw = import.meta.env.VITE_CORA_BACKEND_URL
+    const backendUrl = backendUrlRaw 
+      ? backendUrlRaw.replace(/\/+$/, '')
+      : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3001'
+        : null
+    
+    if (!backendUrl) {
+      throw new Error('URL do backend Cora não configurada. Configure VITE_CORA_BACKEND_URL no Render.')
+    }
+    
     const env = import.meta.env.VITE_CORA_ENV || 'production'
 
     const response = await fetch(`${backendUrl}/api/cora/invoices/${invoiceId}`, {
