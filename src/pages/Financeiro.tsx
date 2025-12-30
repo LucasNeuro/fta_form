@@ -1222,16 +1222,6 @@ export const Financeiro: React.FC = () => {
     .filter(b => b.status === 'pago')
     .reduce((sum, b) => sum + b.valor, 0)
   
-  // Total Pendente: soma dos boletos com status 'pendente'
-  const totalPendente = boletos
-    .filter(b => b.status === 'pendente')
-    .reduce((sum, b) => sum + b.valor, 0)
-  
-  // Total Previsto: soma de todos os boletos (pagos + pendentes + vencidos)
-  const totalPrevisto = boletos
-    .filter(b => b.status !== 'cancelado')
-    .reduce((sum, b) => sum + b.valor, 0)
-  
   // Equipes pagas: equipes que têm pelo menos um boleto pago
   const equipesComBoletoPago = new Set(
     boletos
@@ -1240,16 +1230,54 @@ export const Financeiro: React.FC = () => {
   )
   const equipesPagas = equipesComBoletoPago.size
   
-  // Equipes pendentes: equipes que têm boletos pendentes ou vencidos, mas não têm boleto pago
+  // Total Pendente: soma dos boletos pendentes + equipes com planos sem boletos
+  const totalPendenteBoletos = boletos
+    .filter(b => b.status === 'pendente' || b.status === 'vencido')
+    .reduce((sum, b) => sum + b.valor, 0)
+  
+  // Equipes que têm planos mas não têm boletos pagos ou pendentes
+  const equipesComPlanoSemBoleto = equipes.filter(equipe => {
+    // Se a equipe tem plano
+    const temPlano = equipe.plano_id || equipe.plano
+    if (!temPlano) return false
+    
+    // Se a equipe não tem boleto pago
+    const temBoletoPago = equipesComBoletoPago.has(equipe.id!)
+    if (temBoletoPago) return false
+    
+    // Se a equipe não tem boleto pendente/vencido
+    const temBoletoPendente = boletos.some(b => 
+      b.equipe_id === equipe.id && 
+      (b.status === 'pendente' || b.status === 'vencido')
+    )
+    if (temBoletoPendente) return false
+    
+    return true
+  })
+  
+  // Calcular valor pendente das equipes sem boletos (usar valor do plano)
+  const totalPendenteEquipesSemBoleto = equipesComPlanoSemBoleto.reduce((sum, equipe) => {
+    const valorPlano = equipe.plano?.valor || equipe.valor_cobrado || VALOR_COBRANCA_PADRAO
+    return sum + valorPlano
+  }, 0)
+  
+  // Total Pendente = boletos pendentes + equipes com planos sem boletos
+  const totalPendente = totalPendenteBoletos + totalPendenteEquipesSemBoleto
+  
+  // Equipes pendentes: equipes com boletos pendentes + equipes com planos sem boletos
   const equipesComBoletoPendente = new Set(
     boletos
       .filter(b => (b.status === 'pendente' || b.status === 'vencido') && !equipesComBoletoPago.has(b.equipe_id))
       .map(b => b.equipe_id)
   )
-  // Se não houver boletos, usar fallback baseado no status de pagamento das equipes
-  const equipesPendentes = boletos.length > 0
-    ? equipesComBoletoPendente.size
-    : equipes.filter(e => e.pagamento_efetuado !== true).length
+  const equipesPendentes = equipesComBoletoPendente.size + equipesComPlanoSemBoleto.length
+  
+  // Total Previsto: soma de todos os boletos + equipes com planos sem boletos
+  const totalPrevistoBoletos = boletos
+    .filter(b => b.status !== 'cancelado')
+    .reduce((sum, b) => sum + b.valor, 0)
+  
+  const totalPrevisto = totalPrevistoBoletos + totalPendenteEquipesSemBoleto
   
   const totalEquipes = equipes.length
 
