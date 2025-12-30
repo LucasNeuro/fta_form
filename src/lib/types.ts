@@ -9,6 +9,7 @@ export interface Operador {
   telefone: string
   equipe_id?: string
   lab_fta?: number // Quantidade de laboratórios FTA realizados
+  pat_sar?: boolean // PAT SAR (Sim/Não)
   created_at?: string
   updated_at?: string
 }

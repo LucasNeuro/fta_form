@@ -230,15 +230,16 @@ export const ListaOperadores: React.FC = () => {
     // Cabeçalho da tabela
     const linhaAltura = 8
     const colunas = [
-      { label: 'Nome', width: 35 },
-      { label: 'Codinome', width: 30 },
-      { label: 'Email', width: 45 },
-      { label: 'Telefone', width: 30 },
-      { label: 'Cidade', width: 30 },
-      { label: 'Estado', width: 20 },
-      { label: 'Idade', width: 15 },
-      { label: 'LAB FTA', width: 20 },
-      { label: 'Equipe', width: 30 }
+      { label: 'Nome', width: 30 },
+      { label: 'Codinome', width: 25 },
+      { label: 'Email', width: 40 },
+      { label: 'Telefone', width: 25 },
+      { label: 'Cidade', width: 25 },
+      { label: 'Estado', width: 18 },
+      { label: 'Idade', width: 12 },
+      { label: 'Lab FTA', width: 15 },
+      { label: 'PAT SAR', width: 15 },
+      { label: 'Equipe', width: 25 }
     ]
 
     // Função para desenhar cabeçalho
@@ -313,6 +314,10 @@ export const ListaOperadores: React.FC = () => {
       // LAB FTA
       doc.text(String(operador.lab_fta || 0), xPos, yPos + 4)
       xPos += colunas[7].width
+
+      // PAT SAR
+      doc.text(operador.pat_sar ? 'Sim' : 'Não', xPos, yPos + 4)
+      xPos += colunas[8].width
 
       // Equipe
       doc.text((operador.equipe?.nome || 'Sem equipe').substring(0, 20), xPos, yPos + 4)
@@ -488,7 +493,8 @@ export const ListaOperadores: React.FC = () => {
                   <TableHeaderCell>Telefone</TableHeaderCell>
                   <TableHeaderCell>Cidade / Estado</TableHeaderCell>
                   <TableHeaderCell>Idade</TableHeaderCell>
-                  <TableHeaderCell>LAB FTA</TableHeaderCell>
+                  <TableHeaderCell>Lab FTA</TableHeaderCell>
+                  <TableHeaderCell>PAT SAR</TableHeaderCell>
                   <TableHeaderCell>Equipe</TableHeaderCell>
                   {isAdmin && <TableHeaderCell>Ações</TableHeaderCell>}
                 </TableHeader>
@@ -508,6 +514,15 @@ export const ListaOperadores: React.FC = () => {
                   <TableCell>
                     <span className="px-2 py-1 bg-fta-green/20 text-fta-green rounded text-xs font-medium">
                       {operador.lab_fta || 0}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      operador.pat_sar 
+                        ? 'bg-green-500/20 text-green-400' 
+                        : 'bg-white/10 text-white/60'
+                    }`}>
+                      {operador.pat_sar ? 'Sim' : 'Não'}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -582,8 +597,12 @@ export const ListaOperadores: React.FC = () => {
                   <p className="text-white font-medium">{calcularIdade(operadorSelecionado.nascimento)} anos</p>
                 </div>
                 <div>
-                  <span className="text-white/60">LAB FTA:</span>
+                  <span className="text-white/60">Lab FTA:</span>
                   <p className="text-white font-medium">{operadorSelecionado.lab_fta || 0}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">PAT SAR:</span>
+                  <p className="text-white font-medium">{operadorSelecionado.pat_sar ? 'Sim' : 'Não'}</p>
                 </div>
                 <div>
                   <span className="text-white/60">Equipe:</span>

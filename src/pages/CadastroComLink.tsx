@@ -22,7 +22,8 @@ export const CadastroComLink: React.FC = () => {
     email: '',
     telefone: '',
     equipe_id: '',
-    lab_fta: 0
+    lab_fta: 0,
+    pat_sar: false
   })
 
   const [formDataEquipe, setFormDataEquipe] = useState({
@@ -135,7 +136,8 @@ export const CadastroComLink: React.FC = () => {
           email: '',
           telefone: '',
           equipe_id: link.equipe_id || '',
-          lab_fta: 0
+          lab_fta: 0,
+          pat_sar: false
         })
       } else if (tipo === 'equipe') {
         // Para equipes, manter como único cadastro (equipe só pode ser cadastrada uma vez)
@@ -254,7 +256,7 @@ export const CadastroComLink: React.FC = () => {
                 />
 
                 <Input
-                  label="LAB FTA (numérico)"
+                  label="Número de laboratórios FTA"
                   type="number"
                   min="0"
                   placeholder="Quantidade de laboratórios FTA realizados"
@@ -262,6 +264,21 @@ export const CadastroComLink: React.FC = () => {
                   onChange={(e) => setFormDataOperador({ ...formDataOperador, lab_fta: parseInt(e.target.value) || 0 })}
                   required
                 />
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-white/90 text-sm font-semibold">
+                    PAT SAR <span className="text-white/60 text-xs">(Sim/Não)</span>
+                  </label>
+                  <select
+                    className="px-4 py-3 bg-fta-gray border border-fta-green/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-fta-green focus:border-fta-green transition-all"
+                    value={formDataOperador.pat_sar ? 'true' : 'false'}
+                    onChange={(e) => setFormDataOperador({ ...formDataOperador, pat_sar: e.target.value === 'true' })}
+                    required
+                  >
+                    <option value="false" className="bg-fta-gray">Não</option>
+                    <option value="true" className="bg-fta-gray">Sim</option>
+                  </select>
+                </div>
               </div>
             </section>
 

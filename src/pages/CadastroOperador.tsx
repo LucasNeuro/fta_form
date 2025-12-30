@@ -15,7 +15,9 @@ export const CadastroOperador: React.FC = () => {
     nascimento: '',
     email: '',
     telefone: '',
-    equipe_id: ''
+    equipe_id: '',
+    lab_fta: 0,
+    pat_sar: false
   })
 
   const [equipes, setEquipes] = useState<Equipe[]>([])
@@ -67,7 +69,9 @@ export const CadastroOperador: React.FC = () => {
         nascimento: '',
         email: '',
         telefone: '',
-        equipe_id: ''
+        equipe_id: '',
+        lab_fta: 0,
+        pat_sar: false
       })
       setEquipeSelecionada(null)
       // Redirecionar para lista
@@ -143,6 +147,31 @@ export const CadastroOperador: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
                 required
               />
+
+              <Input
+                label="Número de laboratórios FTA"
+                type="number"
+                min="0"
+                placeholder="Quantidade de laboratórios FTA realizados"
+                value={formData.lab_fta || ''}
+                onChange={(e) => setFormData({ ...formData, lab_fta: parseInt(e.target.value) || 0 })}
+                required
+              />
+
+              <div className="flex flex-col gap-2">
+                <label className="text-white/90 text-sm font-semibold">
+                  PAT SAR <span className="text-white/60 text-xs">(Sim/Não)</span>
+                </label>
+                <select
+                  className="px-4 py-3 bg-fta-gray border border-fta-green/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-fta-green focus:border-fta-green transition-all"
+                  value={formData.pat_sar ? 'true' : 'false'}
+                  onChange={(e) => setFormData({ ...formData, pat_sar: e.target.value === 'true' })}
+                  required
+                >
+                  <option value="false" className="bg-fta-gray">Não</option>
+                  <option value="true" className="bg-fta-gray">Sim</option>
+                </select>
+              </div>
             </div>
           </section>
 

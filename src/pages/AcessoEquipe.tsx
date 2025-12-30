@@ -397,6 +397,7 @@ export const AcessoEquipe: React.FC = () => {
                       <TableHeaderCell className="min-w-[120px]">Codinome</TableHeaderCell>
                       <TableHeaderCell className="min-w-[150px]">Cidade / Estado</TableHeaderCell>
                       <TableHeaderCell className="min-w-[100px]">Labs FTA</TableHeaderCell>
+                      <TableHeaderCell className="min-w-[100px]">PAT SAR</TableHeaderCell>
                       <TableHeaderCell className="min-w-[120px]">Ações</TableHeaderCell>
                     </TableHeader>
                     <TableBody>
@@ -423,6 +424,15 @@ export const AcessoEquipe: React.FC = () => {
                             ) : (
                               <span className="text-white/40">0</span>
                             )}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              operador.pat_sar 
+                                ? 'bg-green-500/20 text-green-400' 
+                                : 'bg-white/10 text-white/60'
+                            }`}>
+                              {operador.pat_sar ? 'Sim' : 'Não'}
+                            </span>
                           </TableCell>
                           <TableCell>
                             <Button
@@ -687,17 +697,27 @@ export const AcessoEquipe: React.FC = () => {
             </div>
 
             {/* Estatísticas */}
-            {operadorSelecionado.lab_fta !== undefined && (
-              <div className="bg-white/5 p-4 rounded-lg border border-white/10">
-                <h3 className="text-lg font-semibold text-white mb-4">Estatísticas</h3>
+            <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-4">Estatísticas</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {operadorSelecionado.lab_fta !== undefined && (
+                  <div>
+                    <p className="text-white/60 text-xs mb-1">Laboratórios FTA</p>
+                    <p className="text-fta-green font-semibold text-2xl">
+                      {operadorSelecionado.lab_fta || 0}
+                    </p>
+                  </div>
+                )}
                 <div>
-                  <p className="text-white/60 text-xs mb-1">Laboratórios FTA</p>
-                  <p className="text-fta-green font-semibold text-2xl">
-                    {operadorSelecionado.lab_fta || 0}
+                  <p className="text-white/60 text-xs mb-1">PAT SAR</p>
+                  <p className={`font-semibold text-2xl ${
+                    operadorSelecionado.pat_sar ? 'text-green-400' : 'text-white/60'
+                  }`}>
+                    {operadorSelecionado.pat_sar ? 'Sim' : 'Não'}
                   </p>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 
