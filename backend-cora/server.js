@@ -23,27 +23,42 @@ const allowedOrigins = process.env.ALLOWED_ORIGIN
   ? process.env.ALLOWED_ORIGIN.split(',').map(origin => origin.trim())
   : ['*']
 
+console.log('🔧 CORS Configurado:')
+console.log('   ALLOWED_ORIGIN:', process.env.ALLOWED_ORIGIN || 'não configurado (permitindo tudo)')
+console.log('   Origins permitidas:', allowedOrigins)
+
 app.use(cors({
   origin: (origin, callback) => {
     // Permitir requisições sem origin (mobile apps, Postman, etc)
-    if (!origin) return callback(null, true)
+    if (!origin) {
+      console.log('✅ CORS: Requisição sem origin permitida')
+      return callback(null, true)
+    }
+    
+    console.log(`🔍 CORS: Verificando origin: ${origin}`)
     
     // Se ALLOWED_ORIGIN for '*', permitir tudo
     if (allowedOrigins.includes('*')) {
+      console.log('✅ CORS: Permitindo todas as origins (*)')
       return callback(null, true)
     }
     
     // Verificar se a origin está na lista permitida
     if (allowedOrigins.includes(origin)) {
+      console.log(`✅ CORS: Origin permitida: ${origin}`)
       callback(null, true)
     } else {
-      console.warn(`⚠️  CORS: Origin não permitida: ${origin}`)
-      callback(null, true) // Permitir mesmo assim para desenvolvimento
+      console.warn(`⚠️  CORS: Origin não está na lista, mas permitindo: ${origin}`)
+      console.warn(`   Lista permitida: ${allowedOrigins.join(', ')}`)
+      // Permitir mesmo assim para não bloquear
+      callback(null, true)
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Requested-With'],
+  exposedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400 // 24 horas
 }))
 
 app.use(express.json())
