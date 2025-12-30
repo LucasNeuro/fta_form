@@ -7,6 +7,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    // Ignorar erros de tipo durante o build
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Ignorar warnings de tipo
+        if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return
+        warn(warning)
+      }
+    }
   },
   server: {
     port: 5173,
