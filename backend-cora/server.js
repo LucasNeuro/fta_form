@@ -127,7 +127,29 @@ const swaggerOptions = {
   apis: ['./server.js'], // Caminho para os arquivos com anotações JSDoc
 }
 
-const swaggerSpec = swaggerJsdoc(swaggerOptions)
+// Gerar especificação Swagger
+let swaggerSpec
+try {
+  swaggerSpec = swaggerJsdoc(swaggerOptions)
+  console.log('✅ Swagger configurado com sucesso')
+} catch (error) {
+  console.error('❌ Erro ao configurar Swagger:', error)
+  // Criar especificação básica em caso de erro
+  swaggerSpec = {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Backend Cora - Integração',
+      version: '1.0.0',
+      description: 'API intermediária para integração com Banco Cora'
+    },
+    servers: [
+      {
+        url: process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`,
+        description: 'Servidor de produção'
+      }
+    ]
+  }
+}
 
 // Rota raiz - redireciona para Swagger
 app.get('/', (req, res) => {
@@ -140,15 +162,37 @@ app.get('/health', (req, res) => {
     status: 'ok', 
     service: 'Backend Cora API',
     swagger: '/api-docs',
+    timestamp: new Date().toISOString(),
+    swaggerConfigured: !!swaggerSpec
+  })
+})
+
+// Rota de teste simples
+app.get('/test', (req, res) => {
+  res.json({ 
+    message: 'Backend está funcionando!',
     timestamp: new Date().toISOString()
   })
 })
 
-// Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'API Backend Cora - Documentação'
-}))
+// Swagger UI - configurar com tratamento de erro
+try {
+  app.use('/api-docs', swaggerUi.serve)
+  app.get('/api-docs', swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'API Backend Cora - Documentação',
+    explorer: true
+  }))
+  console.log('✅ Swagger UI configurado em /api-docs')
+} catch (error) {
+  console.error('❌ Erro ao configurar Swagger UI:', error)
+  app.get('/api-docs', (req, res) => {
+    res.status(500).json({ 
+      error: 'Erro ao carregar Swagger',
+      message: error.message 
+    })
+  })
+}
 
 // Carregar certificado e chave privada
 // Suporta duas formas:
