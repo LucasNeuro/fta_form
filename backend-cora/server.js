@@ -128,7 +128,27 @@ const swaggerOptions = {
 }
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions)
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+
+// Rota raiz - redireciona para Swagger
+app.get('/', (req, res) => {
+  res.redirect('/api-docs')
+})
+
+// Rota de health check
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    service: 'Backend Cora API',
+    swagger: '/api-docs',
+    timestamp: new Date().toISOString()
+  })
+})
+
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'API Backend Cora - Documentação'
+}))
 
 // Carregar certificado e chave privada
 // Suporta duas formas:
