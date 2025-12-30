@@ -40,8 +40,12 @@ const swaggerOptions = {
     },
     servers: [
       {
+        url: process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`,
+        description: process.env.RENDER_EXTERNAL_URL ? 'Servidor de produção (Render)' : 'Servidor de desenvolvimento',
+      },
+      {
         url: `http://localhost:${PORT}`,
-        description: 'Servidor de desenvolvimento',
+        description: 'Servidor local',
       },
     ],
     components: {
@@ -620,11 +624,22 @@ app.use((req, res) => {
   })
 })
 
+const serverUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`
+
 http.createServer(app).listen(PORT, () => {
   console.log(`🚀 Servidor Cora rodando na porta ${PORT}`)
-  console.log(`📄 Certificado: ${certPath}`)
-  console.log(`🔑 Chave: ${keyPath}`)
-  console.log(`🌐 API: http://localhost:${PORT}`)
-  console.log(`📚 Swagger UI: http://localhost:${PORT}/api-docs`)
+  
+  if (process.env.CORA_CERT && process.env.CORA_KEY) {
+    console.log(`📄 Certificado: Carregado de variáveis de ambiente`)
+    console.log(`🔑 Chave: Carregada de variáveis de ambiente`)
+  } else {
+    const certPath = process.env.CORA_CERT_PATH || join(__dirname, 'certificate.pem')
+    const keyPath = process.env.CORA_KEY_PATH || join(__dirname, 'private-key.pem')
+    console.log(`📄 Certificado: ${certPath}`)
+    console.log(`🔑 Chave: ${keyPath}`)
+  }
+  
+  console.log(`🌐 API: ${serverUrl}`)
+  console.log(`📚 Swagger UI: ${serverUrl}/api-docs`)
 })
 
