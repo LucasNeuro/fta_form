@@ -12,6 +12,7 @@ import { RelatorioEquipes } from './pages/RelatorioEquipes'
 import { TiposTransgressoes } from './pages/TiposTransgressoes'
 import { ListaTransgressoes } from './pages/ListaTransgressoes'
 import { Financeiro } from './pages/Financeiro'
+import { AcessoEquipe } from './pages/AcessoEquipe'
 
 function App() {
   return (
@@ -23,6 +24,9 @@ function App() {
           
           {/* Rota pública: Cadastro via link (não precisa estar logado) */}
           <Route path="/cadastro/:tipo/:token" element={<CadastroComLink />} />
+          
+          {/* Rota pública: Acesso da equipe via link (não precisa estar logado) */}
+          <Route path="/acesso-equipe/:token" element={<AcessoEquipe />} />
           
           {/* Rotas protegidas: Todas com Header/Sidebar */}
           <Route

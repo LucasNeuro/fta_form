@@ -17,9 +17,12 @@ export const ListaEquipes: React.FC = () => {
   const [equipeSelecionada, setEquipeSelecionada] = useState<Equipe | null>(null)
   const [sideoverAberto, setSideoverAberto] = useState(false)
   const [linksEquipe, setLinksEquipe] = useState<CadastroLink[]>([])
+  const [linksAcessoEquipe, setLinksAcessoEquipe] = useState<any[]>([])
   const [carregandoLinks, setCarregandoLinks] = useState(false)
   const [nomeLinkOperador, setNomeLinkOperador] = useState<string>('')
+  const [nomeLinkAcesso, setNomeLinkAcesso] = useState<string>('')
   const [mostrarFormLink, setMostrarFormLink] = useState(false)
+  const [mostrarFormLinkAcesso, setMostrarFormLinkAcesso] = useState(false)
   const [editando, setEditando] = useState(false)
   const [formEditEquipe, setFormEditEquipe] = useState<Partial<Equipe>>({})
   const [salvando, setSalvando] = useState(false)
@@ -78,10 +81,75 @@ export const ListaEquipes: React.FC = () => {
 
       if (error) throw error
       if (data) setLinksEquipe(data)
+
+      // Carregar links de acesso também
+      try {
+        const { data: linksAcesso, error: errorAcesso } = await supabase
+          .from('links_acesso_equipes')
+          .select('*')
+          .eq('equipe_id', equipeSelecionada.id)
+          .order('created_at', { ascending: false })
+
+        if (errorAcesso) {
+          // Se a tabela não existir, apenas logar o erro mas não quebrar
+          if (errorAcesso.message.includes('does not exist') || errorAcesso.message.includes('não encontrada')) {
+            console.warn('Tabela links_acesso_equipes não existe ainda. Execute o script SQL schema-links-acesso-equipes.sql')
+            setLinksAcessoEquipe([])
+          } else {
+            throw errorAcesso
+          }
+        } else {
+          setLinksAcessoEquipe(linksAcesso || [])
+        }
+      } catch (errorAcesso: any) {
+        console.error('Erro ao carregar links de acesso:', errorAcesso)
+        setLinksAcessoEquipe([])
+      }
     } catch (error: any) {
       console.error('Erro ao carregar links:', error.message)
     } finally {
       setCarregandoLinks(false)
+    }
+  }
+
+  const criarLinkAcesso = async () => {
+    if (!equipeSelecionada) return
+
+    try {
+      if (!user) {
+        alert('Você precisa estar logado!')
+        return
+      }
+
+      if (!nomeLinkAcesso.trim()) {
+        alert('Por favor, informe um nome para identificar o link!')
+        return
+      }
+
+      const token = crypto.randomUUID()
+      const { error } = await supabase
+        .from('links_acesso_equipes')
+        .insert([{
+          token,
+          equipe_id: equipeSelecionada.id,
+          criado_por: user.id,
+          ativo: true,
+          nome: nomeLinkAcesso.trim()
+        }])
+
+      if (error) throw error
+
+      // Copiar link automaticamente
+      const url = `${window.location.origin}/acesso-equipe/${token}`
+      navigator.clipboard.writeText(url)
+      alert('Link de acesso criado e copiado para área de transferência!')
+      
+      // Limpar e fechar formulário
+      setNomeLinkAcesso('')
+      setMostrarFormLinkAcesso(false)
+      await carregarLinksEquipe()
+    } catch (error: any) {
+      alert('Erro ao criar link: ' + error.message)
     }
   }
 
@@ -771,6 +839,142 @@ export const ListaEquipes: React.FC = () => {
                   ))}
                 </div>
               )}
+              </div>
+            )}
+
+            {/* Links de Acesso da Equipe */}
+            {!editando && (
+              <div className="bg-fta-gray p-5 rounded-lg border border-white/10">
+                <div className="flex justify-between items-center mb-5">
+                  <div>
+                    <h3 className="text-lg font-semibold text-fta-green">Links de Acesso da Equipe</h3>
+                    <p className="text-white/60 text-xs mt-1">
+                      Links exclusivos para o líder acessar informações da equipe (requer pagamento válido)
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setMostrarFormLinkAcesso(!mostrarFormLinkAcesso)}
+                    className="flex items-center gap-2"
+                  >
+                    {mostrarFormLinkAcesso ? 'Cancelar' : '+ Novo Link'}
+                  </Button>
+                </div>
+
+                {mostrarFormLinkAcesso && (
+                  <div className="mb-4 p-4 bg-fta-dark rounded-lg border border-fta-green/30">
+                    <Input
+                      label="Nome do Link (ex: Link de Acesso - Equipe Alpha)"
+                      value={nomeLinkAcesso}
+                      onChange={(e) => setNomeLinkAcesso(e.target.value)}
+                      placeholder="Ex: Link de Acesso - Equipe Alpha"
+                      required
+                    />
+                    <div className="mt-4 flex gap-3">
+                      <Button onClick={criarLinkAcesso} className="flex-1">
+                        Criar Link de Acesso
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setMostrarFormLinkAcesso(false)
+                          setNomeLinkAcesso('')
+                        }}
+                        className="flex-1"
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {carregandoLinks ? (
+                  <p className="text-white/60 text-sm">Carregando links...</p>
+                ) : linksAcessoEquipe.length === 0 ? (
+                  <p className="text-white/60 text-sm">Nenhum link de acesso criado ainda.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {linksAcessoEquipe.map((link) => (
+                      <div
+                        key={link.id}
+                        className={`bg-fta-dark p-4 rounded-lg border ${
+                          link.ativo ? 'border-fta-green/30' : 'border-red-500/30 opacity-60'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0 space-y-3">
+                            <div>
+                              <p className="font-semibold text-white text-base mb-2">
+                                {link.nome || <span className="text-white/40 italic">Sem nome</span>}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`text-xs px-3 py-1 rounded font-medium ${
+                                link.ativo
+                                  ? 'bg-fta-green/20 text-fta-green'
+                                  : 'bg-red-500/20 text-red-400'
+                              }`}>
+                                {link.ativo ? 'Ativo' : 'Desativado'}
+                              </span>
+                              {link.ultimo_acesso && (
+                                <span className="text-white/50 text-xs">
+                                  Último acesso: {formatarData(link.ultimo_acesso)}
+                                </span>
+                              )}
+                              {link.created_at && (
+                                <span className="text-white/50 text-xs">
+                                  Criado em {formatarData(link.created_at)}
+                                </span>
+                              )}
+                            </div>
+                            <div className="bg-fta-dark/50 p-3 rounded border border-fta-green/20">
+                              <p className="text-fta-green text-sm break-all font-mono">
+                                {`${window.location.origin}/acesso-equipe/${link.token}`}
+                              </p>
+                            </div>
+                            <p className="text-white/60 text-xs italic">
+                              O líder pode usar este link para acessar informações da equipe. Acesso requer pagamento válido (38 dias).
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/acesso-equipe/${link.token}`)
+                                alert('Link copiado!')
+                              }}
+                              className="p-2 text-fta-green hover:bg-fta-green/10 rounded transition-colors"
+                              title="Copiar link"
+                            >
+                              <MdContentCopy className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={async () => {
+                                const novoStatus = !link.ativo
+                                const { error } = await supabase
+                                  .from('links_acesso_equipes')
+                                  .update({ ativo: novoStatus })
+                                  .eq('id', link.id)
+                                
+                                if (error) {
+                                  alert('Erro ao atualizar link: ' + error.message)
+                                } else {
+                                  await carregarLinksEquipe()
+                                }
+                              }}
+                              className={`p-2 rounded transition-colors ${
+                                link.ativo
+                                  ? 'text-yellow-400 hover:bg-yellow-400/10'
+                                  : 'text-fta-green hover:bg-fta-green/10'
+                              }`}
+                              title={link.ativo ? 'Desativar link' : 'Ativar link'}
+                            >
+                              {link.ativo ? <MdCancel className="w-5 h-5" /> : <MdCheckCircle className="w-5 h-5" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

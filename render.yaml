@@ -1,6 +1,7 @@
 services:
+  # Frontend (React/Vite)
   - type: web
-    name: form-fta
+    name: form-fta-frontend
     env: node
     plan: free
     buildCommand: npm install && npm run build
@@ -12,5 +13,36 @@ services:
         sync: false
       - key: VITE_SUPABASE_ANON_KEY
         sync: false
-    staticPublishPath: ./dist
+      - key: VITE_CORA_BACKEND_URL
+        sync: false
+        # Será preenchido com a URL do serviço backend-cora após deploy
+        # Exemplo: https://backend-cora.onrender.com
+      - key: VITE_CORA_CLIENT_ID
+        sync: false
+      - key: VITE_CORA_ENV
+        value: production
 
+  # Backend Cora (Node.js/Express para integração Cora API)
+  - type: web
+    name: backend-cora
+    env: node
+    plan: free
+    rootDir: backend-cora
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: ALLOWED_ORIGIN
+        sync: false
+        # Será preenchido com a URL do frontend após deploy
+        # Exemplo: https://form-fta-frontend.onrender.com
+      - key: CORA_CERT_PATH
+        # No Render, vamos usar variáveis de ambiente para certificado
+        # O certificado será armazenado como variável de ambiente
+        sync: false
+      - key: CORA_KEY_PATH
+        # A chave privada será armazenada como variável de ambiente
+        sync: false
