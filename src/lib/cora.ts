@@ -15,7 +15,8 @@ export const coraService = {
    * Usa backend intermediário (já que Supabase Edge Functions não suporta TLS client certificates)
    */
   async getAccessToken(): Promise<CoraTokenResponse> {
-    const backendUrl = import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001'
+    // Normalizar URL (remover barra final se existir)
+    const backendUrl = (import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')
     const clientId = import.meta.env.VITE_CORA_CLIENT_ID || 'int-1ZVwf7iYC106q3iRWEmyJP'
     const env = import.meta.env.VITE_CORA_ENV || 'stage'
 
@@ -54,7 +55,7 @@ export const coraService = {
 
     // Gerar Idempotency-Key único
     const idempotencyKey = crypto.randomUUID()
-    const backendUrl = import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = (import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')
     const env = import.meta.env.VITE_CORA_ENV || 'stage'
 
     const response = await fetch(`${backendUrl}/api/cora/invoices`, {
@@ -91,7 +92,7 @@ export const coraService = {
       throw new Error('Token de acesso não retornado')
     }
 
-    const backendUrl = import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = (import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')
     const env = import.meta.env.VITE_CORA_ENV || 'production'
 
     const response = await fetch(`${backendUrl}/api/cora/invoices/${invoiceId}`, {
@@ -133,7 +134,7 @@ export const coraService = {
 
     // Gerar Idempotency-Key único
     const idempotencyKey = crypto.randomUUID()
-    const backendUrl = import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = (import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')
     const env = import.meta.env.VITE_CORA_ENV || 'production'
 
     // Garantir que payment_forms seja ['PIX']
@@ -176,7 +177,7 @@ export const coraService = {
       throw new Error('Token de acesso não retornado')
     }
 
-    const backendUrl = import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = (import.meta.env.VITE_CORA_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')
     const env = import.meta.env.VITE_CORA_ENV || 'production'
 
     const response = await fetch(`${backendUrl}/api/cora/invoices/${invoiceId}`, {

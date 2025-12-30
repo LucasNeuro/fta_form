@@ -18,10 +18,32 @@ const __dirname = dirname(__filename)
 const app = express()
 const PORT = process.env.PORT || 3001
 
-// CORS
+// CORS - Permitir requisições do frontend
+const allowedOrigins = process.env.ALLOWED_ORIGIN 
+  ? process.env.ALLOWED_ORIGIN.split(',').map(origin => origin.trim())
+  : ['*']
+
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGIN || '*',
-  credentials: true
+  origin: (origin, callback) => {
+    // Permitir requisições sem origin (mobile apps, Postman, etc)
+    if (!origin) return callback(null, true)
+    
+    // Se ALLOWED_ORIGIN for '*', permitir tudo
+    if (allowedOrigins.includes('*')) {
+      return callback(null, true)
+    }
+    
+    // Verificar se a origin está na lista permitida
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      console.warn(`⚠️  CORS: Origin não permitida: ${origin}`)
+      callback(null, true) // Permitir mesmo assim para desenvolvimento
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key']
 }))
 
 app.use(express.json())
